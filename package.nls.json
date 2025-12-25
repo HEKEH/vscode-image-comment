@@ -1,0 +1,15 @@
+{
+  "extension.description": "A VSCode extension that automatically saves pasted images and inserts comment references",
+  "config.saveDirectory.description": "Directory name to save images (relative to workspace root)",
+  "config.commentTemplate.description": "Comment template. Use {path} as placeholder for image path",
+  "config.useRelativePath.description": "Use relative path in comments",
+  "command.pasteImage.title": "Paste Image as Comment",
+  "message.noWorkspaceFolder": "No workspace folder found",
+  "message.failedToSaveImage": "Failed to save image: {0}",
+  "message.noActiveEditor": "No active editor found",
+  "message.imageTooLarge": "Image is too large ({0}MB). Maximum size is {1}MB.",
+  "message.noImageFound": "No image found in clipboard. Please copy an image file or take a screenshot first.",
+  "message.detectingImage": "Detecting image from clipboard...",
+  "message.imageSaved": "Image saved: {0}"
+}
+

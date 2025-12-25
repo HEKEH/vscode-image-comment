@@ -1,7 +1,7 @@
 {
   "name": "image-comment",
   "displayName": "Image Comment",
-  "description": "A VSCode extension that automatically saves pasted images and inserts comment references",
+  "description": "%extension.description%",
   "version": "0.1.0",
   "engines": {
     "vscode": "^1.74.0"
@@ -20,24 +20,24 @@
         "imageComment.saveDirectory": {
           "type": "string",
           "default": ".image-comment",
-          "description": "Directory name to save images (relative to workspace root)"
+          "description": "%config.saveDirectory.description%"
         },
         "imageComment.commentTemplate": {
           "type": "string",
           "default": "![image]({path})",
-          "description": "Comment template. Use {path} as placeholder for image path"
+          "description": "%config.commentTemplate.description%"
         },
         "imageComment.useRelativePath": {
           "type": "boolean",
           "default": true,
-          "description": "Use relative path in comments"
+          "description": "%config.useRelativePath.description%"
         }
       }
     },
     "commands": [
       {
         "command": "imageComment.pasteImage",
-        "title": "Paste Image as Comment",
+        "title": "%command.pasteImage.title%",
         "icon": "$(file-media)"
       }
     ],
@@ -45,7 +45,7 @@
       "editor/context": [
         {
           "command": "imageComment.pasteImage",
-          "when": "editorTextFocus && !editorReadonly",
+          "when": "editorTextFocus && !editorReadonly && !editorHasSelection",
           "group": "imageComment"
         }
       ]
@@ -53,7 +53,8 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "tsc -p ./ && npm run copy-nls",
+    "copy-nls": "cp src/nls*.json out/ 2>/dev/null || true",
     "watch": "tsc -watch -p ./"
   },
   "devDependencies": {
@@ -62,4 +63,3 @@
     "typescript": "^5.0.0"
   }
 }
-

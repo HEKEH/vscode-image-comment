@@ -1,0 +1,10 @@
+{
+  "message.noWorkspaceFolder": "No workspace folder found",
+  "message.failedToSaveImage": "Failed to save image: {0}",
+  "message.noActiveEditor": "No active editor found",
+  "message.imageTooLarge": "Image is too large ({0}MB). Maximum size is {1}MB.",
+  "message.noImageFound": "No image found in clipboard. Please copy an image file or take a screenshot first.",
+  "message.detectingImage": "Detecting image from clipboard...",
+  "message.imageSaved": "Image saved: {0}"
+}
+

@@ -1,0 +1,15 @@
+{
+  "extension.description": "一個自動儲存貼上的圖片並插入註解引用的 VSCode 擴充功能",
+  "config.saveDirectory.description": "儲存圖片目錄名稱（相對於工作區根目錄）",
+  "config.commentTemplate.description": "註解範本。使用 {path} 作為圖片路徑的佔位符",
+  "config.useRelativePath.description": "在註解中使用相對路徑",
+  "command.pasteImage.title": "貼上圖片為註解",
+  "message.noWorkspaceFolder": "未找到工作區資料夾",
+  "message.failedToSaveImage": "儲存圖片失敗：{0}",
+  "message.noActiveEditor": "未找到活動編輯器",
+  "message.imageTooLarge": "圖片過大（{0}MB）。最大大小為 {1}MB。",
+  "message.noImageFound": "剪貼簿中未找到圖片。請先複製圖片檔案或截圖。",
+  "message.detectingImage": "正在檢測剪貼簿中的圖片...",
+  "message.imageSaved": "圖片已儲存：{0}"
+}
+

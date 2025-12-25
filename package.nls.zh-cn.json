@@ -1,0 +1,15 @@
+{
+  "extension.description": "一个自动保存粘贴的图片并插入注释引用的 VSCode 扩展",
+  "config.saveDirectory.description": "保存图片的目录名称（相对于工作区根目录）",
+  "config.commentTemplate.description": "注释模板。使用 {path} 作为图片路径的占位符",
+  "config.useRelativePath.description": "在注释中使用相对路径",
+  "command.pasteImage.title": "粘贴图片为注释",
+  "message.noWorkspaceFolder": "未找到工作区文件夹",
+  "message.failedToSaveImage": "保存图片失败：{0}",
+  "message.noActiveEditor": "未找到活动编辑器",
+  "message.imageTooLarge": "图片过大（{0}MB）。最大大小为 {1}MB。",
+  "message.noImageFound": "剪贴板中未找到图片。请先复制图片文件或截图。",
+  "message.detectingImage": "正在检测剪贴板中的图片...",
+  "message.imageSaved": "图片已保存：{0}"
+}
+

@@ -5,6 +5,8 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { statSync, renameSync } from 'fs';
 
+import { messages } from './nls';
+
 const execAsync = promisify(exec);
 
 // 最大图片大小限制（50MB）
@@ -129,9 +131,10 @@ return "no-file"`;
         // 6. 检查文件大小
         if (stats.size > MAX_IMAGE_SIZE) {
           vscode.window.showWarningMessage(
-            `Image is too large (${(stats.size / 1024 / 1024).toFixed(
-              2,
-            )}MB). Maximum size is ${MAX_IMAGE_SIZE / 1024 / 1024}MB.`,
+            messages.imageTooLarge(
+              (stats.size / 1024 / 1024).toFixed(2),
+              (MAX_IMAGE_SIZE / 1024 / 1024).toString(),
+            ),
           );
           return null;
         }
@@ -219,9 +222,10 @@ end try`;
     if (stats.size > MAX_IMAGE_SIZE) {
       fs.unlinkSync(tempFile);
       vscode.window.showWarningMessage(
-        `Image is too large (${(stats.size / 1024 / 1024).toFixed(
-          2,
-        )}MB). Maximum size is ${MAX_IMAGE_SIZE / 1024 / 1024}MB.`,
+        messages.imageTooLarge(
+          (stats.size / 1024 / 1024).toFixed(2),
+          (MAX_IMAGE_SIZE / 1024 / 1024).toString(),
+        ),
       );
       return null;
     }
@@ -278,9 +282,10 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
 
         if (stats.size > MAX_IMAGE_SIZE) {
           vscode.window.showWarningMessage(
-            `Image is too large (${(stats.size / 1024 / 1024).toFixed(
-              2,
-            )}MB). Maximum size is ${MAX_IMAGE_SIZE / 1024 / 1024}MB.`,
+            messages.imageTooLarge(
+              (stats.size / 1024 / 1024).toFixed(2),
+              (MAX_IMAGE_SIZE / 1024 / 1024).toString(),
+            ),
           );
           return null;
         }
@@ -585,7 +590,7 @@ async function handleImagePaste(
         fs.unlinkSync(imageInfo.tempFilePath);
       } catch {}
     }
-    vscode.window.showErrorMessage('No workspace folder found');
+    vscode.window.showErrorMessage(messages.noWorkspaceFolder());
     return;
   }
 
@@ -636,7 +641,8 @@ async function handleImagePaste(
     });
 
     // 显示成功提示
-    vscode.window.setStatusBarMessage(`Image saved: ${fileName}`, 3000);
+    const statusMessage = messages.imageSaved(fileName);
+    vscode.window.setStatusBarMessage(statusMessage, 5000);
   } catch (error) {
     // 清理临时文件（如果移动/复制失败）
     // 只删除临时文件，不删除原始文件
@@ -650,7 +656,7 @@ async function handleImagePaste(
         fs.unlinkSync(imageInfo.tempFilePath);
       } catch {}
     }
-    vscode.window.showErrorMessage(`Failed to save image: ${error}`);
+    vscode.window.showErrorMessage(messages.failedToSaveImage(String(error)));
     // 即使保存失败，也执行默认粘贴
     await vscode.commands.executeCommand('editor.action.clipboardPasteAction');
   }
@@ -662,12 +668,12 @@ async function handleImagePaste(
 async function handlePasteImageCommand(): Promise<void> {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
-    vscode.window.showWarningMessage('No active editor found');
+    vscode.window.showWarningMessage(messages.noActiveEditor());
     return;
   }
 
   // 显示进度提示
-  vscode.window.setStatusBarMessage('Detecting image from clipboard...', 1000);
+  vscode.window.setStatusBarMessage(messages.detectingImage(), 1000);
 
   // 检测剪贴板中是否有图片（带超时保护）
   const imageDetectionPromise = detectImageFromClipboard();
@@ -683,9 +689,7 @@ async function handlePasteImageCommand(): Promise<void> {
     await handleImagePaste(editor, imageInfo);
   } else {
     // 不是图片，显示提示信息
-    vscode.window.showInformationMessage(
-      'No image found in clipboard. Please copy an image file or take a screenshot first.',
-    );
+    vscode.window.showInformationMessage(messages.noImageFound());
   }
 }
 

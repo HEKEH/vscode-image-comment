@@ -1,0 +1,10 @@
+{
+  "message.noWorkspaceFolder": "未找到工作區資料夾",
+  "message.failedToSaveImage": "儲存圖片失敗：{0}",
+  "message.noActiveEditor": "未找到活動編輯器",
+  "message.imageTooLarge": "圖片過大（{0}MB）。最大大小為 {1}MB。",
+  "message.noImageFound": "剪貼簿中未找到圖片。請先複製圖片檔案或截圖。",
+  "message.detectingImage": "正在檢測剪貼簿中的圖片...",
+  "message.imageSaved": "圖片已儲存：{0}"
+}
+
