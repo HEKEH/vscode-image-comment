@@ -1,0 +1,63 @@
+{
+  "name": "image-comment",
+  "displayName": "Image Comment",
+  "description": "A VSCode extension that automatically saves pasted images and inserts comment references",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Image Comment",
+      "properties": {
+        "imageComment.saveDirectory": {
+          "type": "string",
+          "default": ".image-comment",
+          "description": "Directory name to save images (relative to workspace root)"
+        },
+        "imageComment.commentTemplate": {
+          "type": "string",
+          "default": "![image]({path})",
+          "description": "Comment template. Use {path} as placeholder for image path"
+        },
+        "imageComment.useRelativePath": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use relative path in comments"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "imageComment.paste",
+        "title": "Paste (with image detection)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "imageComment.paste",
+        "key": "ctrl+v",
+        "mac": "cmd+v",
+        "when": "editorTextFocus && !editorReadonly"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.74.0",
+    "typescript": "^5.0.0"
+  }
+}
+
