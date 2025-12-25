@@ -3,8 +3,14 @@
   "displayName": "Image Comment",
   "description": "%extension.description%",
   "version": "0.1.0",
+  "publisher": "hekaigustav",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.74.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HEKEH/vscode-image-comment.git"
   },
   "categories": [
     "Other"
@@ -52,14 +58,19 @@
     }
   },
   "scripts": {
+    "publish": "ts-node ./scripts/vsce.ts publish",
     "vscode:prepublish": "npm run compile",
+    "package": "ts-node ./scripts/vsce.ts package",
     "compile": "tsc -p ./ && npm run copy-nls",
+    "postcompile": "ts-node scripts/check-after-compile.ts",
     "copy-nls": "cp src/nls*.json out/ 2>/dev/null || true",
     "watch": "tsc -watch -p ./"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.74.0",
+    "dotenv": "^16.4.5",
+    "ts-node": "^10.9.2",
     "typescript": "^5.0.0"
   }
 }
