@@ -1,96 +1,295 @@
 # Image Comment - VSCode Extension
 
-一个 VSCode 插件，用于自动保存粘贴的图片并插入注释引用。
+A VSCode extension that automatically saves pasted images and inserts comment references.
 
-## 功能特性
+[English](./README.md) | [简体中文](./README.zh-CN.md)
 
-- 🖼️ **自动检测图片粘贴**：监听粘贴事件，自动检测剪贴板中的图片
-- 💾 **自动保存图片**：将图片保存到项目目录下的 `.image-comment` 文件夹
-- 📝 **自动插入注释**：在粘贴位置自动插入图片引用注释
-- 🌍 **多平台支持**：支持 macOS、Windows 和 Linux
-- 🔧 **智能注释格式**：根据文件类型自动选择合适的注释格式
-- ⚙️ **可配置选项**：支持自定义保存目录、注释模板等
+## ✨ Features
 
-## 安装
+- 🖼️ **Auto-detect image paste**: Automatically detects images in clipboard (supports screenshots, copied image files, etc.)
+- 💾 **Auto-save images**: Saves images to a specified folder in the project directory (default: `.image-comment`)
+- 📝 **Auto-insert comments**: Automatically inserts image reference comments at the paste position
+- 🌍 **Multi-platform support**: Supports macOS, Windows, and Linux
+- 🔧 **Smart comment format**: Automatically selects appropriate comment format based on file type
+- 🌐 **Internationalization**: Supports English, Simplified Chinese, and Traditional Chinese
+- ⚙️ **Configurable options**: Supports custom save directory, comment template, etc.
+- 📋 **Context menu**: Provides convenient right-click menu option
 
-### 从源码安装
+## 📦 Installation
 
-1. 克隆或下载此仓库
-2. 在项目目录运行：
+### Install from VS Code Marketplace (Recommended)
+
+1. Open VS Code
+2. Press `Ctrl+Shift+X` (macOS: `Cmd+Shift+X`) to open the Extensions panel
+3. Search for "Image Comment"
+4. Click Install
+
+### Install from Source
+
+1. Clone or download this repository:
+
+   ```bash
+   git clone https://github.com/your-username/image-comment.git
+   cd image-comment
+   ```
+
+2. Install dependencies and compile:
+
    ```bash
    npm install
    npm run compile
    ```
-3. 在 VSCode 中按 `F5` 打开扩展开发窗口
-4. 或者使用 `vsce package` 打包为 `.vsix` 文件进行安装
 
-## 使用方法
+3. Press `F5` in VS Code to open the Extension Development Host for testing
 
-1. 复制图片到剪贴板（支持 PNG、JPG、JPEG、GIF、WebP 等格式）
-2. 在代码编辑器中按 `Ctrl+V`（macOS: `Cmd+V`）粘贴
-3. 插件会自动：
-   - 检测到图片
-   - 保存图片到 `.image-comment` 文件夹
-   - 在当前位置插入注释，例如：`// ![image](.image-comment/image-20240101-120000-abc123.png)`
+4. Or package as a `.vsix` file:
 
-## 配置选项
+   ```bash
+   npm install -g vsce
+   vsce package
+   ```
 
-在 VSCode 设置中可以配置以下选项：
+   Then install the generated `.vsix` file in VS Code using "Install from VSIX"
 
-- `imageComment.saveDirectory`：图片保存目录名称（默认：`.image-comment`）
-- `imageComment.commentTemplate`：注释模板（默认：`![image]({path})`，使用 `{path}` 作为路径占位符）
-- `imageComment.useRelativePath`：是否使用相对路径（默认：`true`）
+## 🚀 Usage
 
-## 支持的注释格式
+### Method 1: Context Menu (Recommended)
 
-插件会根据文件类型自动选择合适的注释格式：
+1. Copy an image to clipboard (supports the following methods):
+   - Take a screenshot (macOS: `Cmd+Shift+4`, Windows: `Win+Shift+S`, Linux: use system screenshot tool)
+   - Copy image file (copy image file in file manager)
+   - Copy image from browser or other applications
 
-- **JavaScript/TypeScript/Java/C/C++/Go/Rust** 等：`// 注释` 或 `/* 注释 */`
-- **Python**：`# 注释` 或 `""" 注释 """`
-- **HTML**：`<!-- 注释 -->`
-- **CSS**：`/* 注释 */`
-- **SQL**：`-- 注释` 或 `/* 注释 */`
-- **Shell**：`# 注释`
-- 更多语言支持...
+2. Right-click in the code editor and select **"Paste Image as Comment"**
 
-## 系统要求
+3. The extension will automatically:
+   - Detect the image in clipboard
+   - Save the image to the `.image-comment` folder
+   - Insert a comment at the current position
 
-- **macOS**：需要系统支持（无需额外工具）
-- **Windows**：需要 PowerShell（系统自带）
-- **Linux**：需要安装 `xclip`：
+### Method 2: Command Palette
+
+1. Copy an image to clipboard
+2. Press `Ctrl+Shift+P` (macOS: `Cmd+Shift+P`) to open the Command Palette
+3. Type "Paste Image as Comment" and select it
+
+## 📝 Examples
+
+### Example 1: JavaScript/TypeScript
+
+```javascript
+// ![image](.image-comment/image-20241225-120000-abc123.png)
+```
+
+### Example 2: Python
+
+```python
+# ![image](.image-comment/image-20241225-120000-abc123.png)
+```
+
+### Example 3: HTML
+
+```html
+<!-- ![image](.image-comment/image-20241225-120000-abc123.png) -->
+```
+
+### Example 4: Markdown
+
+```markdown
+![image](.image-comment/image-20241225-120000-abc123.png)
+```
+
+## ⚙️ Configuration Options
+
+You can configure the following options in VS Code settings:
+
+| Configuration | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `imageComment.saveDirectory` | string | `.image-comment` | Directory name to save images (relative to workspace root) |
+| `imageComment.commentTemplate` | string | `![image]({path})` | Comment template, use `{path}` as placeholder for image path |
+| `imageComment.useRelativePath` | boolean | `true` | Whether to use relative path in comments |
+
+### Configuration Example
+
+Add the following to VS Code settings (`settings.json`):
+
+```json
+{
+  "imageComment.saveDirectory": ".images",
+  "imageComment.commentTemplate": "<!-- Image: {path} -->",
+  "imageComment.useRelativePath": true
+}
+```
+
+## 🎨 Supported Comment Formats
+
+The extension automatically selects the appropriate comment format based on file type:
+
+| Language | Single-line | Multi-line |
+| :--- | :--- | :--- |
+| JavaScript/TypeScript | `//` | `/* */` |
+| Python | `#` | `""" """` |
+| Java/C/C++/C#/Go/Rust | `//` | `/* */` |
+| HTML | - | `<!-- -->` |
+| CSS/SCSS/Less | `//` | `/* */` |
+| SQL | `--` | `/* */` |
+| Shell/Bash | `#` | `: <<'EOF' ... EOF` |
+| Ruby | `#` | `=begin =end` |
+| PHP | `//` | `/* */` |
+| Swift/Kotlin/Scala | `//` | `/* */` |
+| YAML | `#` | - |
+| JSON | - | `/* */` |
+
+## 🖼️ Supported Image Formats
+
+- PNG
+- JPEG/JPG
+- GIF
+- WebP
+- BMP
+- SVG
+
+**Note**: Maximum image size is 50MB.
+
+## 🌐 Internationalization
+
+The extension supports the following languages:
+
+- English
+- Simplified Chinese (zh-CN)
+- Traditional Chinese (zh-TW)
+
+The language will automatically switch based on VS Code's language setting.
+
+## 💻 System Requirements
+
+### macOS
+
+- No additional tools required, uses system clipboard API
+
+### Windows
+
+- Requires PowerShell (included by default, Windows 10+ has it pre-installed)
+
+### Linux
+
+- Requires `xclip` to be installed:
+
   ```bash
   # Ubuntu/Debian
   sudo apt-get install xclip
 
-  # Fedora
+  # Fedora/CentOS
   sudo dnf install xclip
+  # or
+  sudo yum install xclip
 
   # Arch Linux
   sudo pacman -S xclip
+
+  # openSUSE
+  sudo zypper install xclip
   ```
 
-## 开发
+## 🔧 Development
+
+### Requirements
+
+- Node.js >= 16
+- npm >= 8
+- VS Code >= 1.74.0
+
+### Development Commands
 
 ```bash
-# 安装依赖
+# Install dependencies
 npm install
 
-# 编译
+# Compile TypeScript
 npm run compile
 
-# 监听模式编译
+# Watch mode compilation (for development)
 npm run watch
 
-# 打包扩展
+# Package extension
 npm install -g vsce
 vsce package
 ```
 
-## 许可证
+### Project Structure
 
-MIT
+```text
+image-comment/
+├── src/
+│   ├── extension.ts      # Main extension file
+│   ├── nls.ts           # Internationalization support
+│   └── nls.*.json       # Language files
+├── out/                 # Compiled output directory
+├── package.json         # Extension configuration
+└── tsconfig.json       # TypeScript configuration
+```
 
-## 贡献
+## ❓ FAQ
 
-欢迎提交 Issue 和 Pull Request！
+### Q: Why is "Paste Image as Comment" not showing in the context menu?
 
+A: Make sure:
+
+1. The editor has focus
+2. The editor is not in read-only mode
+3. No text is selected
+
+### Q: Where are images saved?
+
+A: By default, images are saved in the `.image-comment` folder in the workspace root. You can change the save location by modifying `imageComment.saveDirectory` in settings.
+
+### Q: How to modify the comment format?
+
+A: Modify `imageComment.commentTemplate` in VS Code settings, using `{path}` as a placeholder for the image path.
+
+### Q: What image formats are supported?
+
+A: Supports common image formats such as PNG, JPEG, GIF, WebP, BMP, SVG.
+
+### Q: Is there a size limit for images?
+
+A: Yes, the maximum supported image size is 50MB.
+
+## 📄 License
+
+MIT License
+
+## 🤝 Contributing
+
+Issues and Pull Requests are welcome!
+
+### Contributing Guidelines
+
+1. Fork this repository
+
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+
+5. Open a Pull Request
+
+## 📝 Changelog
+
+### v0.1.0
+
+- ✨ Initial release
+- 🖼️ Support for image paste and auto-save
+- 📝 Support for multiple language comment formats
+- 🌐 Internationalization support (English, Simplified Chinese, Traditional Chinese)
+- ⚙️ Custom configuration options
+
+## 🔗 Related Links
+
+- [VS Code Extension API](https://code.visualstudio.com/api)
+- [TypeScript](https://www.typescriptlang.org/)
+
+---
+
+If this extension is helpful to you, please give it a ⭐ Star!
