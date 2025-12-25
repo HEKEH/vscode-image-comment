@@ -110,7 +110,6 @@ return "no-file"`;
 
       // 3. 路径规范化（处理 .. 和 . 以及多余的斜杠）
       actualPath = path.normalize(actualPath);
-      console.log('actualPath', actualPath);
 
       // 4. 验证文件存在且是文件（不是目录）
       if (fs.existsSync(actualPath)) {
@@ -658,21 +657,22 @@ async function handleImagePaste(
 }
 
 /**
- * 处理粘贴命令
+ * 处理粘贴图片命令（从右键菜单触发）
  */
-async function handlePasteCommand(): Promise<void> {
+async function handlePasteImageCommand(): Promise<void> {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
-    // 没有活动编辑器，执行默认粘贴
-    await vscode.commands.executeCommand('editor.action.clipboardPasteAction');
+    vscode.window.showWarningMessage('No active editor found');
     return;
   }
+
+  // 显示进度提示
+  vscode.window.setStatusBarMessage('Detecting image from clipboard...', 1000);
 
   // 检测剪贴板中是否有图片（带超时保护）
   const imageDetectionPromise = detectImageFromClipboard();
   const timeoutPromise = new Promise<ImageInfo | null>(resolve => {
-    const timer = global.setTimeout(() => resolve(null), 1000); // 1秒超时
-    // 清理定时器（虽然 Promise 完成后会自动清理，但显式清理更安全）
+    const timer = global.setTimeout(() => resolve(null), 2000); // 2秒超时
     imageDetectionPromise.finally(() => clearTimeout(timer));
   });
 
@@ -682,20 +682,22 @@ async function handlePasteCommand(): Promise<void> {
     // 是图片，处理图片粘贴
     await handleImagePaste(editor, imageInfo);
   } else {
-    // 不是图片，执行默认粘贴
-    await vscode.commands.executeCommand('editor.action.clipboardPasteAction');
+    // 不是图片，显示提示信息
+    vscode.window.showInformationMessage(
+      'No image found in clipboard. Please copy an image file or take a screenshot first.',
+    );
   }
 }
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('Image Comment extension is now active!');
 
-  // 注册粘贴命令
-  const pasteCommand = vscode.commands.registerCommand(
-    'imageComment.paste',
-    handlePasteCommand,
+  // 注册粘贴图片命令（从右键菜单触发）
+  const pasteImageCommand = vscode.commands.registerCommand(
+    'imageComment.pasteImage',
+    handlePasteImageCommand,
   );
-  context.subscriptions.push(pasteCommand);
+  context.subscriptions.push(pasteImageCommand);
 }
 
 export function deactivate() {}

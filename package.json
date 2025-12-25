@@ -36,18 +36,20 @@
     },
     "commands": [
       {
-        "command": "imageComment.paste",
-        "title": "Paste (with image detection)"
+        "command": "imageComment.pasteImage",
+        "title": "Paste Image as Comment",
+        "icon": "$(file-media)"
       }
     ],
-    "keybindings": [
-      {
-        "command": "imageComment.paste",
-        "key": "ctrl+v",
-        "mac": "cmd+v",
-        "when": "editorTextFocus && !editorReadonly"
-      }
-    ]
+    "menus": {
+      "editor/context": [
+        {
+          "command": "imageComment.pasteImage",
+          "when": "editorTextFocus && !editorReadonly",
+          "group": "imageComment"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
