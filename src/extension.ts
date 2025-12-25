@@ -245,12 +245,57 @@ end try`;
 
 /**
  * 检测剪贴板中是否为图片（Windows）
- * 优化版本：添加文件大小检查和流式读取
+ * 优化版本：先检测文件路径，再检测图片数据
  */
 async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
   let tempFile: string | null = null;
   try {
-    // 使用 PowerShell 检测剪贴板中的图片
+    // 第一步：检测剪贴板中是否有文件路径（当用户复制文件时）
+    const filePathScript = `
+      Add-Type -AssemblyName System.Windows.Forms
+      $fileList = [System.Windows.Forms.Clipboard]::GetFileDropList()
+      if ($fileList.Count -gt 0) {
+        $filePath = $fileList[0]
+        Write-Output $filePath
+      }
+    `;
+
+    try {
+      const filePathResult = await execAsync(
+        `powershell -NoProfile -Command "${filePathScript.replace(/"/g, '`"')}"`,
+      );
+      const filePath = filePathResult.stdout.trim();
+
+      if (filePath && fs.existsSync(filePath)) {
+        const stats = statSync(filePath);
+        if (!stats.isFile()) {
+          return null;
+        }
+
+        const ext = path.extname(filePath).slice(1).toLowerCase();
+        if (!IMAGE_EXTENSIONS.includes(ext)) {
+          return null;
+        }
+
+        if (stats.size > MAX_IMAGE_SIZE) {
+          vscode.window.showWarningMessage(
+            `Image is too large (${(stats.size / 1024 / 1024).toFixed(
+              2,
+            )}MB). Maximum size is ${MAX_IMAGE_SIZE / 1024 / 1024}MB.`,
+          );
+          return null;
+        }
+
+        return {
+          tempFilePath: filePath,
+          extension: ext,
+        };
+      }
+    } catch (e) {
+      // 文件路径检测失败，继续检测图片数据
+    }
+
+    // 第二步：检测剪贴板中的图片数据
     const os = require('os');
     tempFile = path.join(os.tmpdir(), `vscode-image-${Date.now()}.png`);
     const psScript = `
@@ -320,11 +365,72 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
 
 /**
  * 检测剪贴板中是否为图片（Linux）
- * 优化版本：添加文件大小检查和流式读取
+ * 优化版本：先检测文件路径，再检测图片数据
  */
 async function detectImageFromClipboardLinux(): Promise<ImageInfo | null> {
   let tempFile: string | null = null;
   try {
+    // 第一步：检测剪贴板中是否有文件路径（当用户复制文件时）
+    // Linux 使用 xclip 检测文件路径
+    try {
+      const filePathCheck = await execAsync(
+        'xclip -selection clipboard -t text/uri-list -o 2>/dev/null || echo ""',
+      );
+      let filePath = filePathCheck.stdout.trim();
+
+      if (filePath) {
+        // 处理 file:// URL
+        if (filePath.startsWith('file://')) {
+          try {
+            const url = new URL(filePath);
+            filePath = url.pathname;
+            if (filePath.startsWith('//')) {
+              filePath = filePath.substring(2);
+            }
+          } catch (e) {
+            filePath = filePath.replace(/^file:\/\//, '');
+            try {
+              filePath = decodeURIComponent(filePath);
+            } catch {
+              filePath = filePath.replace(/%20/g, ' ');
+            }
+          }
+        }
+
+        filePath = filePath.replace(/[\x00-\x1F\x7F]/g, '').trim();
+        filePath = path.normalize(filePath);
+
+        if (filePath && fs.existsSync(filePath)) {
+          const stats = statSync(filePath);
+          if (!stats.isFile()) {
+            return null;
+          }
+
+          const ext = path.extname(filePath).slice(1).toLowerCase();
+          if (!IMAGE_EXTENSIONS.includes(ext)) {
+            return null;
+          }
+
+          if (stats.size > MAX_IMAGE_SIZE) {
+            vscode.window.showWarningMessage(
+              `Image is too large (${(stats.size / 1024 / 1024).toFixed(
+                2,
+              )}MB). Maximum size is ${MAX_IMAGE_SIZE / 1024 / 1024}MB.`,
+            );
+            return null;
+          }
+
+          return {
+            tempFilePath: filePath,
+            extension: ext,
+          };
+        }
+      }
+    } catch (e) {
+      // 文件路径检测失败，继续检测图片数据
+    }
+
+    // 第二步：检测剪贴板中的图片数据
     // Linux 使用 xclip 检测剪贴板中的图片
     // 首先检查是否有图片数据
     const checkResult = await execAsync(
