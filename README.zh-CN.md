@@ -62,6 +62,8 @@
 
 2. 在代码编辑器中右键点击，选择 **"粘贴图片为注释"**（Paste Image as Comment）
 
+   <img src="./images/context-menu.png" alt="右键菜单" width="200">
+
 3. 插件会自动：
    - 检测剪贴板中的图片
    - 保存图片到 `.image-comment` 文件夹

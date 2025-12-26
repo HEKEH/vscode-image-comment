@@ -62,6 +62,8 @@ A VSCode extension that automatically saves pasted images and inserts comment re
 
 2. Right-click in the code editor and select **"Paste Image as Comment"**
 
+   <img src="./images/context-menu.png" alt="Context Menu" width="200">
+
 3. The extension will automatically:
    - Detect the image in clipboard
    - Save the image to the `.image-comment` folder
