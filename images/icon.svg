@@ -1,0 +1,51 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background (transparent or subtle gradient) -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#007ACC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#005A9E;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bgGradient)"/>
+
+  <!-- Main image icon (centered, larger, no white background) -->
+  <g transform="translate(16, 20)">
+    <!-- Image preview area - larger, no white frame -->
+    <rect x="0" y="0" width="96" height="88" rx="8" fill="#E8F4F8"/>
+
+    <!-- Image content - simple landscape - larger -->
+    <rect x="4" y="4" width="88" height="60" rx="4" fill="#4A90E2" opacity="0.3"/>
+    <!-- Mountains - larger -->
+    <path d="M 8 64 L 24 36 L 40 48 L 56 24 L 72 48 L 80 64 Z" fill="#4A90E2" opacity="0.7"/>
+    <!-- Sun - larger -->
+    <circle cx="60" cy="20" r="8" fill="#FFB84D"/>
+  </g>
+
+  <!-- Comment badge/tag (top right corner) -->
+  <g transform="translate(88, 20)">
+    <!-- Badge background -->
+    <circle cx="0" cy="0" r="18" fill="#FF6B6B"/>
+    <!-- Comment symbol // inside badge - diagonal slashes -->
+    <g transform="translate(-6, -4)">
+      <!-- First slash / -->
+      <line x1="0" y1="8" x2="8" y2="0" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+      <!-- Second slash / (more spacing) -->
+      <line x1="6" y1="8" x2="14" y2="0" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- Optional: subtle shadow for depth -->
+  <defs>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+      <feOffset dx="0" dy="2" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+</svg>

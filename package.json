@@ -19,6 +19,7 @@
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
+  "icon": "images/icon.png",
   "contributes": {
     "configuration": {
       "title": "Image Comment",
@@ -70,6 +71,7 @@
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.74.0",
     "dotenv": "^16.4.5",
+    "sharp": "^0.34.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.0.0"
   }
