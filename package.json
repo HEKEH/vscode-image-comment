@@ -2,7 +2,7 @@
   "name": "image-comment",
   "displayName": "Image Comment",
   "description": "%extension.description%",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "hekaigustav",
   "license": "MIT",
   "engines": {
@@ -14,6 +14,15 @@
   },
   "categories": [
     "Other"
+  ],
+  "keywords": [
+    "image",
+    "paste",
+    "screenshot",
+    "picture",
+    "comment",
+    "annotation",
+    "code comment"
   ],
   "activationEvents": [
     "onStartupFinished"

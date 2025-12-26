@@ -4,6 +4,8 @@
 
 [English](./README.md) | [简体中文](./README.zh-CN.md)
 
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/hekaigustav.image-comment?label=VS%20Code%20Marketplace&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=hekaigustav.image-comment)
+
 ## ✨ 功能特性
 
 - 🖼️ **自动检测图片粘贴**：自动检测剪贴板中的图片（支持截图、复制图片文件等）
@@ -19,6 +21,10 @@
 
 ### 从 VS Code 市场安装（推荐）
 
+**直接链接**：[从市场安装](https://marketplace.visualstudio.com/items?itemName=hekaigustav.image-comment)
+
+或按照以下步骤：
+
 1. 打开 VS Code
 2. 按 `Ctrl+Shift+X`（macOS: `Cmd+Shift+X`）打开扩展面板
 3. 搜索 "Image Comment"
@@ -29,7 +35,7 @@
 1. 克隆或下载此仓库：
 
    ```bash
-   git clone https://github.com/your-username/image-comment.git
+   git clone https://github.com/HEKEH/vscode-image-comment.git
    cd image-comment
    ```
 
@@ -260,37 +266,6 @@ A: 是的，最大支持 50MB 的图片文件。
 ## 📄 许可证
 
 MIT License
-
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-### 贡献指南
-
-1. Fork 本仓库
-
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-
-5. 开启 Pull Request
-
-## 📝 更新日志
-
-### v0.1.0
-
-- ✨ 初始版本发布
-- 🖼️ 支持图片粘贴和自动保存
-- 📝 支持多种语言的注释格式
-- 🌐 支持国际化（英文、简体中文、繁体中文）
-- ⚙️ 支持自定义配置选项
-
-## 🔗 相关链接
-
-- [VS Code Extension API](https://code.visualstudio.com/api)
-- [TypeScript](https://www.typescriptlang.org/)
 
 ---
 

@@ -4,6 +4,8 @@ A VSCode extension that automatically saves pasted images and inserts comment re
 
 [English](./README.md) | [简体中文](./README.zh-CN.md)
 
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/hekaigustav.image-comment?label=VS%20Code%20Marketplace&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=hekaigustav.image-comment)
+
 ## ✨ Features
 
 - 🖼️ **Auto-detect image paste**: Automatically detects images in clipboard (supports screenshots, copied image files, etc.)
@@ -19,6 +21,10 @@ A VSCode extension that automatically saves pasted images and inserts comment re
 
 ### Install from VS Code Marketplace (Recommended)
 
+**Direct Link**: [Install from Marketplace](https://marketplace.visualstudio.com/items?itemName=hekaigustav.image-comment)
+
+Or follow these steps:
+
 1. Open VS Code
 2. Press `Ctrl+Shift+X` (macOS: `Cmd+Shift+X`) to open the Extensions panel
 3. Search for "Image Comment"
@@ -29,7 +35,7 @@ A VSCode extension that automatically saves pasted images and inserts comment re
 1. Clone or download this repository:
 
    ```bash
-   git clone https://github.com/your-username/image-comment.git
+   git clone https://github.com/HEKEH/vscode-image-comment.git
    cd image-comment
    ```
 
@@ -260,37 +266,6 @@ A: Yes, the maximum supported image size is 50MB.
 ## 📄 License
 
 MIT License
-
-## 🤝 Contributing
-
-Issues and Pull Requests are welcome!
-
-### Contributing Guidelines
-
-1. Fork this repository
-
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-
-5. Open a Pull Request
-
-## 📝 Changelog
-
-### v0.1.0
-
-- ✨ Initial release
-- 🖼️ Support for image paste and auto-save
-- 📝 Support for multiple language comment formats
-- 🌐 Internationalization support (English, Simplified Chinese, Traditional Chinese)
-- ⚙️ Custom configuration options
-
-## 🔗 Related Links
-
-- [VS Code Extension API](https://code.visualstudio.com/api)
-- [TypeScript](https://www.typescriptlang.org/)
 
 ---
 
