@@ -9,6 +9,9 @@ import { messages } from './nls';
 
 const execAsync = promisify(exec);
 
+// 日志输出通道
+let outputChannel: vscode.OutputChannel | undefined;
+
 // 最大图片大小限制（50MB）
 const MAX_IMAGE_SIZE = 50 * 1024 * 1024;
 
@@ -267,7 +270,15 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
       const filePathResult = await execAsync(
         `powershell -NoProfile -Command "${filePathScript.replace(/"/g, '`"')}"`,
       );
-      const filePath = filePathResult.stdout.trim();
+      let filePath = filePathResult.stdout.trim();
+
+      // 清理和验证文件路径（防止注入攻击）
+      if (filePath) {
+        // 移除控制字符和换行符
+        filePath = filePath.replace(/[\x00-\x1F\x7F]/g, '').trim();
+        // 路径规范化（处理 .. 和 . 以及多余的斜杠）
+        filePath = path.normalize(filePath);
+      }
 
       if (filePath && fs.existsSync(filePath)) {
         const stats = statSync(filePath);
@@ -297,12 +308,19 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
       }
     } catch (e) {
       // 文件路径检测失败，继续检测图片数据
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      outputChannel?.appendLine(
+        `[Image Comment] File path detection failed: ${errorMessage}`,
+      );
     }
 
     // 第二步：检测剪贴板中的图片数据
     const os = require('os');
     tempFile = path.join(os.tmpdir(), `vscode-image-${Date.now()}.png`);
+
+    // 使用参数化方式传递文件路径，避免字符串插值注入风险
     const psScript = `
+      param([string]$TempFile)
       Add-Type -AssemblyName System.Windows.Forms
       $clipboard = [System.Windows.Forms.Clipboard]::GetImage()
       if ($clipboard -ne $null) {
@@ -318,19 +336,65 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
         } else {
           $ext = "png"
         }
-        $tempFile = "${tempFile.replace(/\\/g, '\\\\')}"
-        $tempFile = $tempFile -replace '\\.png$', ".$ext"
+        $tempFile = $TempFile -replace '\\.png$', ".$ext"
         $clipboard.Save($tempFile)
         Write-Output $tempFile
       }
     `;
 
-    const result = await execAsync(
-      `powershell -NoProfile -Command "${psScript.replace(/"/g, '`"')}"`,
-    );
-    const outputFile = result.stdout.trim();
+    // 安全地转义 PowerShell 参数中的双引号
+    const escapedTempFile = tempFile.replace(/"/g, '`"');
+    let result;
+    try {
+      result = await execAsync(
+        `powershell -NoProfile -Command "${psScript.replace(/"/g, '`"')}" -ArgumentList "${escapedTempFile}"`,
+      );
+    } catch (execError) {
+      const errorMessage = execError instanceof Error ? execError.message : String(execError);
+      outputChannel?.appendLine(
+        `[Image Comment] PowerShell execution failed: ${errorMessage}`,
+      );
+      if (execError instanceof Error && execError.stack) {
+        outputChannel?.appendLine(`[Image Comment] PowerShell error stack: ${execError.stack}`);
+      }
+      return null;
+    }
+    let outputFile = result.stdout.trim();
+
+    // 清理和验证输出文件路径
+    if (outputFile) {
+      // 移除控制字符
+      outputFile = outputFile.replace(/[\x00-\x1F\x7F]/g, '').trim();
+      // 路径规范化
+      outputFile = path.normalize(outputFile);
+    }
 
     if (!outputFile || !fs.existsSync(outputFile)) {
+      outputChannel?.appendLine(
+        `[Image Comment] PowerShell output file not found or invalid: ${outputFile || 'empty'}`,
+      );
+      return null;
+    }
+
+    // 验证输出文件路径在临时目录内（防止路径遍历攻击）
+    const normalizedTempDir = path.normalize(os.tmpdir());
+    const normalizedOutputFile = path.normalize(outputFile);
+    if (!normalizedOutputFile.startsWith(normalizedTempDir + path.sep) &&
+        normalizedOutputFile !== normalizedTempDir) {
+      // 文件不在临时目录中，可能是安全问题，删除并返回
+      outputChannel?.appendLine(
+        `[Image Comment] Security warning: Output file is outside temp directory. TempDir: ${normalizedTempDir}, OutputFile: ${normalizedOutputFile}`,
+      );
+      try {
+        if (fs.existsSync(normalizedOutputFile)) {
+          fs.unlinkSync(normalizedOutputFile);
+        }
+      } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        outputChannel?.appendLine(
+          `[Image Comment] Failed to delete suspicious file: ${errorMessage}`,
+        );
+      }
       return null;
     }
 
@@ -358,10 +422,26 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
       extension,
     };
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    outputChannel?.appendLine(
+      `[Image Comment] Error in detectImageFromClipboardWindows: ${errorMessage}`,
+    );
+    if (errorStack) {
+      outputChannel?.appendLine(`[Image Comment] Stack trace: ${errorStack}`);
+    }
     if (tempFile && fs.existsSync(tempFile)) {
       try {
         fs.unlinkSync(tempFile);
-      } catch {}
+      } catch (cleanupError) {
+        const cleanupErrorMessage =
+          cleanupError instanceof Error
+            ? cleanupError.message
+            : String(cleanupError);
+        outputChannel?.appendLine(
+          `[Image Comment] Failed to cleanup temp file ${tempFile}: ${cleanupErrorMessage}`,
+        );
+      }
     }
     return null;
   }
@@ -695,6 +775,10 @@ async function handlePasteImageCommand(): Promise<void> {
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('Image Comment extension is now active!');
+
+  // 创建输出通道用于日志记录
+  outputChannel = vscode.window.createOutputChannel('Image Comment');
+  context.subscriptions.push(outputChannel);
 
   // 注册粘贴图片命令（从右键菜单触发）
   const pasteImageCommand = vscode.commands.registerCommand(
