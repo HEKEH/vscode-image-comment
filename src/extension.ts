@@ -257,20 +257,27 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
   let tempFile: string | null = null;
   try {
     // 第一步：检测剪贴板中是否有文件路径（当用户复制文件时）
-    const filePathScript = `
-      Add-Type -AssemblyName System.Windows.Forms
-      $fileList = [System.Windows.Forms.Clipboard]::GetFileDropList()
-      if ($fileList.Count -gt 0) {
-        $filePath = $fileList[0]
-        Write-Output $filePath
-      }
-    `;
+    // 使用 Base64 编码避免转义问题
+    const filePathScript = `Add-Type -AssemblyName System.Windows.Forms; $fileList = [System.Windows.Forms.Clipboard]::GetFileDropList(); if ($fileList.Count -gt 0) { Write-Output $fileList[0] }`;
+    const encodedScript = Buffer.from(filePathScript, 'utf16le').toString(
+      'base64',
+    );
 
     try {
       const filePathResult = await execAsync(
-        `powershell -NoProfile -Command "${filePathScript.replace(/"/g, '`"')}"`,
+        `powershell -NoProfile -EncodedCommand ${encodedScript}`,
       );
       let filePath = filePathResult.stdout.trim();
+
+      // 调试信息：记录 stdout 和 stderr
+      if (filePathResult.stderr) {
+        outputChannel?.appendLine(
+          `[Image Comment] PowerShell stderr: ${filePathResult.stderr}`,
+        );
+      }
+      outputChannel?.appendLine(
+        `[Image Comment] Detected file path: ${filePath || '(empty)'}`,
+      );
 
       // 清理和验证文件路径（防止注入攻击）
       if (filePath) {
@@ -347,15 +354,21 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
     let result;
     try {
       result = await execAsync(
-        `powershell -NoProfile -Command "${psScript.replace(/"/g, '`"')}" -ArgumentList "${escapedTempFile}"`,
+        `powershell -NoProfile -Command "${psScript.replace(
+          /"/g,
+          '`"',
+        )}" -ArgumentList "${escapedTempFile}"`,
       );
     } catch (execError) {
-      const errorMessage = execError instanceof Error ? execError.message : String(execError);
+      const errorMessage =
+        execError instanceof Error ? execError.message : String(execError);
       outputChannel?.appendLine(
         `[Image Comment] PowerShell execution failed: ${errorMessage}`,
       );
       if (execError instanceof Error && execError.stack) {
-        outputChannel?.appendLine(`[Image Comment] PowerShell error stack: ${execError.stack}`);
+        outputChannel?.appendLine(
+          `[Image Comment] PowerShell error stack: ${execError.stack}`,
+        );
       }
       return null;
     }
@@ -371,7 +384,9 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
 
     if (!outputFile || !fs.existsSync(outputFile)) {
       outputChannel?.appendLine(
-        `[Image Comment] PowerShell output file not found or invalid: ${outputFile || 'empty'}`,
+        `[Image Comment] PowerShell output file not found or invalid: ${
+          outputFile || 'empty'
+        }`,
       );
       return null;
     }
@@ -379,8 +394,10 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
     // 验证输出文件路径在临时目录内（防止路径遍历攻击）
     const normalizedTempDir = path.normalize(os.tmpdir());
     const normalizedOutputFile = path.normalize(outputFile);
-    if (!normalizedOutputFile.startsWith(normalizedTempDir + path.sep) &&
-        normalizedOutputFile !== normalizedTempDir) {
+    if (
+      !normalizedOutputFile.startsWith(normalizedTempDir + path.sep) &&
+      normalizedOutputFile !== normalizedTempDir
+    ) {
       // 文件不在临时目录中，可能是安全问题，删除并返回
       outputChannel?.appendLine(
         `[Image Comment] Security warning: Output file is outside temp directory. TempDir: ${normalizedTempDir}, OutputFile: ${normalizedOutputFile}`,
