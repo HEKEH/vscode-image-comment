@@ -12,6 +12,31 @@ const execAsync = promisify(exec);
 // 日志输出通道
 let outputChannel: vscode.OutputChannel | undefined;
 
+/**
+ * 过滤 PowerShell 的 CLIXML 进度信息，只保留真正的错误
+ */
+function filterPowerShellStderr(stderr: string): string | null {
+  if (!stderr || !stderr.trim()) {
+    return null;
+  }
+
+  // 过滤掉 CLIXML 格式的进度信息（以 #< CLIXML 开头）
+  if (
+    stderr.trim().startsWith('#< CLIXML') ||
+    stderr.includes('<Objs Version=')
+  ) {
+    return null; // 这是进度信息，不是错误
+  }
+
+  // 过滤掉空行和只包含空白字符的内容
+  const trimmed = stderr.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  return trimmed;
+}
+
 // 最大图片大小限制（50MB）
 const MAX_IMAGE_SIZE = 50 * 1024 * 1024;
 
@@ -258,7 +283,8 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
   try {
     // 第一步：检测剪贴板中是否有文件路径（当用户复制文件时）
     // 使用 Base64 编码避免转义问题
-    const filePathScript = `Add-Type -AssemblyName System.Windows.Forms; $fileList = [System.Windows.Forms.Clipboard]::GetFileDropList(); if ($fileList.Count -gt 0) { Write-Output $fileList[0] }`;
+    // 设置 $ProgressPreference 来抑制进度输出
+    const filePathScript = `$ProgressPreference = 'SilentlyContinue'; Add-Type -AssemblyName System.Windows.Forms; $fileList = [System.Windows.Forms.Clipboard]::GetFileDropList(); if ($fileList.Count -gt 0) { Write-Output $fileList[0] }`;
     const encodedScript = Buffer.from(filePathScript, 'utf16le').toString(
       'base64',
     );
@@ -267,14 +293,16 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
       const filePathResult = await execAsync(
         `powershell -NoProfile -EncodedCommand ${encodedScript}`,
       );
-      let filePath = filePathResult.stdout.trim();
 
-      // 调试信息：记录 stdout 和 stderr
-      if (filePathResult.stderr) {
+      // 调试信息：只记录真正的错误，过滤掉 CLIXML 进度信息
+      const filteredStderr = filterPowerShellStderr(filePathResult.stderr);
+      if (filteredStderr) {
         outputChannel?.appendLine(
-          `[Image Comment] PowerShell stderr: ${filePathResult.stderr}`,
+          `[Image Comment] PowerShell stderr: ${filteredStderr}`,
         );
       }
+
+      let filePath = filePathResult.stdout.trim();
       outputChannel?.appendLine(
         `[Image Comment] Detected file path: ${filePath || '(empty)'}`,
       );
@@ -287,31 +315,57 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
         filePath = path.normalize(filePath);
       }
 
-      if (filePath && fs.existsSync(filePath)) {
-        const stats = statSync(filePath);
-        if (!stats.isFile()) {
-          return null;
-        }
+      if (filePath) {
+        try {
+          if (!fs.existsSync(filePath)) {
+            return null;
+          }
 
-        const ext = path.extname(filePath).slice(1).toLowerCase();
-        if (!IMAGE_EXTENSIONS.includes(ext)) {
-          return null;
-        }
+          let stats;
+          try {
+            stats = statSync(filePath);
+          } catch (statError) {
+            const errorMessage =
+              statError instanceof Error
+                ? statError.message
+                : String(statError);
+            outputChannel?.appendLine(
+              `[Image Comment] Failed to get file stats: ${errorMessage}`,
+            );
+            return null;
+          }
 
-        if (stats.size > MAX_IMAGE_SIZE) {
-          vscode.window.showWarningMessage(
-            messages.imageTooLarge(
-              (stats.size / 1024 / 1024).toFixed(2),
-              (MAX_IMAGE_SIZE / 1024 / 1024).toString(),
-            ),
+          if (!stats.isFile()) {
+            return null;
+          }
+
+          const ext = path.extname(filePath).slice(1).toLowerCase();
+          if (!IMAGE_EXTENSIONS.includes(ext)) {
+            return null;
+          }
+
+          if (stats.size > MAX_IMAGE_SIZE) {
+            vscode.window.showWarningMessage(
+              messages.imageTooLarge(
+                (stats.size / 1024 / 1024).toFixed(2),
+                (MAX_IMAGE_SIZE / 1024 / 1024).toString(),
+              ),
+            );
+            return null;
+          }
+
+          return {
+            tempFilePath: filePath,
+            extension: ext,
+          };
+        } catch (fileError) {
+          const errorMessage =
+            fileError instanceof Error ? fileError.message : String(fileError);
+          outputChannel?.appendLine(
+            `[Image Comment] File validation error: ${errorMessage}`,
           );
           return null;
         }
-
-        return {
-          tempFilePath: filePath,
-          extension: ext,
-        };
       }
     } catch (e) {
       // 文件路径检测失败，继续检测图片数据
@@ -325,39 +379,19 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
     const os = require('os');
     tempFile = path.join(os.tmpdir(), `vscode-image-${Date.now()}.png`);
 
-    // 使用参数化方式传递文件路径，避免字符串插值注入风险
-    const psScript = `
-      param([string]$TempFile)
-      Add-Type -AssemblyName System.Windows.Forms
-      $clipboard = [System.Windows.Forms.Clipboard]::GetImage()
-      if ($clipboard -ne $null) {
-        $format = $clipboard.RawFormat.Guid
-        if ($format -eq [System.Drawing.Imaging.ImageFormat]::Png.Guid) {
-          $ext = "png"
-        } elseif ($format -eq [System.Drawing.Imaging.ImageFormat]::Jpeg.Guid) {
-          $ext = "jpg"
-        } elseif ($format -eq [System.Drawing.Imaging.ImageFormat]::Gif.Guid) {
-          $ext = "gif"
-        } elseif ($format -eq [System.Drawing.Imaging.ImageFormat]::Bmp.Guid) {
-          $ext = "bmp"
-        } else {
-          $ext = "png"
-        }
-        $tempFile = $TempFile -replace '\\.png$', ".$ext"
-        $clipboard.Save($tempFile)
-        Write-Output $tempFile
-      }
-    `;
+    // 使用 Base64 编码避免转义问题
+    // 将临时文件路径作为变量嵌入脚本中
+    // 设置 $ProgressPreference 来抑制进度输出
+    const escapedTempFile = tempFile.replace(/'/g, "''").replace(/"/g, '`"');
+    const psScript = `$ProgressPreference = 'SilentlyContinue'; $TempFile = "${escapedTempFile}"; Add-Type -AssemblyName System.Windows.Forms; $clipboard = [System.Windows.Forms.Clipboard]::GetImage(); if ($clipboard -ne $null) { $format = $clipboard.RawFormat.Guid; if ($format -eq [System.Drawing.Imaging.ImageFormat]::Png.Guid) { $ext = "png" } elseif ($format -eq [System.Drawing.Imaging.ImageFormat]::Jpeg.Guid) { $ext = "jpg" } elseif ($format -eq [System.Drawing.Imaging.ImageFormat]::Gif.Guid) { $ext = "gif" } elseif ($format -eq [System.Drawing.Imaging.ImageFormat]::Bmp.Guid) { $ext = "bmp" } else { $ext = "png" }; $tempFile = $TempFile -replace '\\.png$', ".$ext"; try { $clipboard.Save($tempFile); Write-Output $tempFile } catch { Write-Error $_.Exception.Message } }`;
+    const encodedImageScript = Buffer.from(psScript, 'utf16le').toString(
+      'base64',
+    );
 
-    // 安全地转义 PowerShell 参数中的双引号
-    const escapedTempFile = tempFile.replace(/"/g, '`"');
     let result;
     try {
       result = await execAsync(
-        `powershell -NoProfile -Command "${psScript.replace(
-          /"/g,
-          '`"',
-        )}" -ArgumentList "${escapedTempFile}"`,
+        `powershell -NoProfile -EncodedCommand ${encodedImageScript}`,
       );
     } catch (execError) {
       const errorMessage =
@@ -372,72 +406,135 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
       }
       return null;
     }
-    let outputFile = result.stdout.trim();
 
-    // 清理和验证输出文件路径
-    if (outputFile) {
-      // 移除控制字符
-      outputFile = outputFile.replace(/[\x00-\x1F\x7F]/g, '').trim();
-      // 路径规范化
-      outputFile = path.normalize(outputFile);
+    // 调试信息：只记录真正的错误，过滤掉 CLIXML 进度信息
+    const filteredStderr = filterPowerShellStderr(result.stderr);
+    if (filteredStderr) {
+      outputChannel?.appendLine(
+        `[Image Comment] PowerShell stderr: ${filteredStderr}`,
+      );
     }
 
-    if (!outputFile || !fs.existsSync(outputFile)) {
-      outputChannel?.appendLine(
-        `[Image Comment] PowerShell output file not found or invalid: ${
-          outputFile || 'empty'
-        }`,
-      );
-      return null;
-    }
+    let outputFile: string | null = null;
+    try {
+      outputFile = result.stdout.trim();
 
-    // 验证输出文件路径在临时目录内（防止路径遍历攻击）
-    const normalizedTempDir = path.normalize(os.tmpdir());
-    const normalizedOutputFile = path.normalize(outputFile);
-    if (
-      !normalizedOutputFile.startsWith(normalizedTempDir + path.sep) &&
-      normalizedOutputFile !== normalizedTempDir
-    ) {
-      // 文件不在临时目录中，可能是安全问题，删除并返回
-      outputChannel?.appendLine(
-        `[Image Comment] Security warning: Output file is outside temp directory. TempDir: ${normalizedTempDir}, OutputFile: ${normalizedOutputFile}`,
-      );
-      try {
-        if (fs.existsSync(normalizedOutputFile)) {
-          fs.unlinkSync(normalizedOutputFile);
-        }
-      } catch (e) {
-        const errorMessage = e instanceof Error ? e.message : String(e);
+      // 清理和验证输出文件路径
+      if (outputFile) {
+        // 移除控制字符
+        outputFile = outputFile.replace(/[\x00-\x1F\x7F]/g, '').trim();
+        // 路径规范化
+        outputFile = path.normalize(outputFile);
+      }
+
+      if (!outputFile || !fs.existsSync(outputFile)) {
         outputChannel?.appendLine(
-          `[Image Comment] Failed to delete suspicious file: ${errorMessage}`,
+          `[Image Comment] PowerShell output file not found or invalid: ${
+            outputFile || 'empty'
+          }`,
         );
+        return null;
+      }
+
+      // 验证输出文件路径在临时目录内（防止路径遍历攻击）
+      const normalizedTempDir = path.normalize(os.tmpdir());
+      const normalizedOutputFile = path.normalize(outputFile);
+      if (
+        !normalizedOutputFile.startsWith(normalizedTempDir + path.sep) &&
+        normalizedOutputFile !== normalizedTempDir
+      ) {
+        // 文件不在临时目录中，可能是安全问题，删除并返回
+        outputChannel?.appendLine(
+          `[Image Comment] Security warning: Output file is outside temp directory. TempDir: ${normalizedTempDir}, OutputFile: ${normalizedOutputFile}`,
+        );
+        try {
+          if (fs.existsSync(normalizedOutputFile)) {
+            fs.unlinkSync(normalizedOutputFile);
+          }
+        } catch (e) {
+          const errorMessage = e instanceof Error ? e.message : String(e);
+          outputChannel?.appendLine(
+            `[Image Comment] Failed to delete suspicious file: ${errorMessage}`,
+          );
+        }
+        return null;
+      }
+
+      // 检查文件大小
+      let stats;
+      try {
+        stats = statSync(outputFile);
+      } catch (statError) {
+        const errorMessage =
+          statError instanceof Error ? statError.message : String(statError);
+        outputChannel?.appendLine(
+          `[Image Comment] Failed to get file stats: ${errorMessage}`,
+        );
+        return null;
+      }
+
+      if (stats.size > MAX_IMAGE_SIZE) {
+        try {
+          fs.unlinkSync(outputFile);
+        } catch (unlinkError) {
+          const errorMessage =
+            unlinkError instanceof Error
+              ? unlinkError.message
+              : String(unlinkError);
+          outputChannel?.appendLine(
+            `[Image Comment] Failed to delete oversized file: ${errorMessage}`,
+          );
+        }
+        vscode.window.showWarningMessage(
+          `Image is too large (${(stats.size / 1024 / 1024).toFixed(
+            2,
+          )}MB). Maximum size is ${MAX_IMAGE_SIZE / 1024 / 1024}MB.`,
+        );
+        return null;
+      }
+
+      const extension = path.extname(outputFile).slice(1).toLowerCase();
+      if (!IMAGE_EXTENSIONS.includes(extension)) {
+        try {
+          fs.unlinkSync(outputFile);
+        } catch (unlinkError) {
+          const errorMessage =
+            unlinkError instanceof Error
+              ? unlinkError.message
+              : String(unlinkError);
+          outputChannel?.appendLine(
+            `[Image Comment] Failed to delete unsupported file: ${errorMessage}`,
+          );
+        }
+        return null;
+      }
+
+      // 直接返回临时文件路径，避免读取到内存
+      return {
+        tempFilePath: outputFile,
+        extension,
+      };
+    } catch (fileError) {
+      const errorMessage =
+        fileError instanceof Error ? fileError.message : String(fileError);
+      outputChannel?.appendLine(
+        `[Image Comment] File processing error: ${errorMessage}`,
+      );
+      if (fileError instanceof Error && fileError.stack) {
+        outputChannel?.appendLine(
+          `[Image Comment] File processing stack: ${fileError.stack}`,
+        );
+      }
+      // 清理可能创建的文件
+      if (outputFile && fs.existsSync(outputFile)) {
+        try {
+          fs.unlinkSync(outputFile);
+        } catch (cleanupError) {
+          // 忽略清理错误
+        }
       }
       return null;
     }
-
-    // 检查文件大小
-    const stats = statSync(outputFile);
-    if (stats.size > MAX_IMAGE_SIZE) {
-      fs.unlinkSync(outputFile);
-      vscode.window.showWarningMessage(
-        `Image is too large (${(stats.size / 1024 / 1024).toFixed(
-          2,
-        )}MB). Maximum size is ${MAX_IMAGE_SIZE / 1024 / 1024}MB.`,
-      );
-      return null;
-    }
-
-    const extension = path.extname(outputFile).slice(1).toLowerCase();
-    if (!IMAGE_EXTENSIONS.includes(extension)) {
-      fs.unlinkSync(outputFile);
-      return null;
-    }
-
-    // 直接返回临时文件路径，避免读取到内存
-    return {
-      tempFilePath: outputFile,
-      extension,
-    };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
@@ -709,22 +806,52 @@ async function handleImagePaste(
     const tempDir = os.tmpdir();
     const isTempFile = imageInfo.tempFilePath.startsWith(tempDir);
 
-    if (isTempFile) {
-      // 临时文件：直接移动到最终位置
-      renameSync(imageInfo.tempFilePath, filePath);
-    } else {
-      // 原始文件：复制到最终位置（不移动原始文件）
-      fs.copyFileSync(imageInfo.tempFilePath, filePath);
+    // 验证源文件存在
+    if (!fs.existsSync(imageInfo.tempFilePath)) {
+      throw new Error(`Source image file not found: ${imageInfo.tempFilePath}`);
+    }
+
+    try {
+      if (isTempFile) {
+        // 临时文件：直接移动到最终位置
+        renameSync(imageInfo.tempFilePath, filePath);
+      } else {
+        // 原始文件：复制到最终位置（不移动原始文件）
+        fs.copyFileSync(imageInfo.tempFilePath, filePath);
+      }
+    } catch (fileOpError) {
+      const errorMessage =
+        fileOpError instanceof Error
+          ? fileOpError.message
+          : String(fileOpError);
+      outputChannel?.appendLine(
+        `[Image Comment] Failed to save image file: ${errorMessage}`,
+      );
+      throw fileOpError;
+    }
+
+    // 验证目标文件已创建
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`Target image file was not created: ${filePath}`);
     }
 
     // 生成注释路径
     let commentPath: string;
-    if (useRelativePath) {
-      // 使用相对于 workspace 根目录的相对路径
-      const relativePath = path.relative(workspaceRoot, filePath);
-      commentPath = relativePath.replace(/\\/g, '/');
-    } else {
-      commentPath = filePath;
+    try {
+      if (useRelativePath) {
+        // 使用相对于 workspace 根目录的相对路径
+        const relativePath = path.relative(workspaceRoot, filePath);
+        commentPath = relativePath.replace(/\\/g, '/');
+      } else {
+        commentPath = filePath;
+      }
+    } catch (pathError) {
+      const errorMessage =
+        pathError instanceof Error ? pathError.message : String(pathError);
+      outputChannel?.appendLine(
+        `[Image Comment] Failed to generate comment path: ${errorMessage}`,
+      );
+      throw pathError;
     }
 
     // 生成注释文本
@@ -732,15 +859,36 @@ async function handleImagePaste(
     const comment = generateComment(commentPath, languageId, config);
 
     // 插入注释
-    const position = editor.selection.active;
-    await editor.edit((editBuilder: vscode.TextEditorEdit) => {
-      editBuilder.insert(position, comment);
-    });
+    try {
+      const position = editor.selection.active;
+      await editor.edit((editBuilder: vscode.TextEditorEdit) => {
+        editBuilder.insert(position, comment);
+      });
+    } catch (editError) {
+      const errorMessage =
+        editError instanceof Error ? editError.message : String(editError);
+      outputChannel?.appendLine(
+        `[Image Comment] Failed to insert comment: ${errorMessage}`,
+      );
+      // 即使插入失败，文件已经保存，所以不抛出错误
+    }
 
     // 显示成功提示
     const statusMessage = messages.imageSaved(fileName);
     vscode.window.setStatusBarMessage(statusMessage, 5000);
   } catch (error) {
+    // 捕获所有错误，包括 CodeExpectedError
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorName = error instanceof Error ? error.name : 'UnknownError';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
+    outputChannel?.appendLine(
+      `[Image Comment] Error in handleImagePaste: [${errorName}] ${errorMessage}`,
+    );
+    if (errorStack) {
+      outputChannel?.appendLine(`[Image Comment] Stack trace: ${errorStack}`);
+    }
+
     // 清理临时文件（如果移动/复制失败）
     // 只删除临时文件，不删除原始文件
     const os = require('os');
@@ -751,11 +899,35 @@ async function handleImagePaste(
     ) {
       try {
         fs.unlinkSync(imageInfo.tempFilePath);
-      } catch {}
+      } catch (cleanupError) {
+        const cleanupErrorMessage =
+          cleanupError instanceof Error
+            ? cleanupError.message
+            : String(cleanupError);
+        outputChannel?.appendLine(
+          `[Image Comment] Failed to cleanup temp file: ${cleanupErrorMessage}`,
+        );
+      }
     }
-    vscode.window.showErrorMessage(messages.failedToSaveImage(String(error)));
+
+    // 如果是 CodeExpectedError（通常是 VS Code 尝试打开二进制文件导致的），静默处理
+    if (errorName === 'CodeExpectedError') {
+      outputChannel?.appendLine(
+        `[Image Comment] CodeExpectedError caught (likely VS Code trying to open binary file), ignoring.`,
+      );
+      // 不显示错误消息给用户，因为这是 VS Code 内部行为
+      return;
+    }
+
+    vscode.window.showErrorMessage(messages.failedToSaveImage(errorMessage));
     // 即使保存失败，也执行默认粘贴
-    await vscode.commands.executeCommand('editor.action.clipboardPasteAction');
+    try {
+      await vscode.commands.executeCommand(
+        'editor.action.clipboardPasteAction',
+      );
+    } catch (pasteError) {
+      // 忽略粘贴命令的错误
+    }
   }
 }
 
@@ -775,7 +947,7 @@ async function handlePasteImageCommand(): Promise<void> {
   // 检测剪贴板中是否有图片（带超时保护）
   const imageDetectionPromise = detectImageFromClipboard();
   const timeoutPromise = new Promise<ImageInfo | null>(resolve => {
-    const timer = global.setTimeout(() => resolve(null), 2000); // 2秒超时
+    const timer = global.setTimeout(() => resolve(null), 10000); // 10秒超时
     imageDetectionPromise.finally(() => clearTimeout(timer));
   });
 
