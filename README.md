@@ -34,6 +34,10 @@ A VSCode extension that automatically saves pasted images and inserts comment re
 | `imageComment.commentTemplate` | string | `![image]({path})` | Comment template, use `{path}` as placeholder for image path |
 | `imageComment.useRelativePath` | boolean | `true` | Whether to use relative path in comments |
 
+## 🔗 Recommended Extension
+
+For better image preview experience, we recommend installing the [Image Preview](https://marketplace.visualstudio.com/items?itemName=kisstkondoros.vscode-gutter-preview) extension to preview images directly in the editor.
+
 ## 💻 System Requirements
 
 - **macOS**: No additional tools required

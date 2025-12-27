@@ -34,6 +34,10 @@
 | `imageComment.commentTemplate` | string | `![image]({path})` | 注释模板，使用 `{path}` 作为图片路径的占位符 |
 | `imageComment.useRelativePath` | boolean | `true` | 是否在注释中使用相对路径 |
 
+## 🔗 推荐扩展
+
+为了获得更好的图片预览体验，推荐安装 [Image Preview](https://marketplace.visualstudio.com/items?itemName=kisstkondoros.vscode-gutter-preview) 扩展，可在编辑器中直接预览图片。
+
 ## 💻 系统要求
 
 - **macOS**：无需额外工具
