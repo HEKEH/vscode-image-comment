@@ -12,7 +12,6 @@
 - 💾 **自动保存图片**：将图片保存到项目目录下的指定文件夹（默认：`.image-comment`）
 - 📝 **自动插入注释**：在粘贴位置自动插入图片引用注释
 - 🔧 **智能注释格式**：根据文件类型自动选择合适的注释格式（JavaScript、Python、HTML、Markdown 等）
-- 🌍 **多平台支持**：支持 macOS、Windows 和 Linux
 
 ## 📦 安装
 
@@ -42,7 +41,6 @@
 
 - **macOS**：无需额外工具
 - **Windows**：需要 PowerShell（Windows 10+ 默认已安装）
-- **Linux**：需要安装 `xclip`（`sudo apt-get install xclip` 或相应发行版的包管理器）
 
 ## ❓ 常见问题
 

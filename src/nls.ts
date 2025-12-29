@@ -88,4 +88,6 @@ export const messages = {
     localize('message.detectingImage', defaultMessages['message.detectingImage']),
   imageSaved: (fileName: string) =>
     localize('message.imageSaved', defaultMessages['message.imageSaved'], fileName),
+  noSupportedPlatform: () =>
+    localize('message.noSupportedPlatform', defaultMessages['message.noSupportedPlatform']),
 };

@@ -813,136 +813,136 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
   return imageDataResult;
 }
 
-/**
- * 检测剪贴板中是否为图片（Linux）
- * 优化版本：先检测文件路径，再检测图片数据
- */
-async function detectImageFromClipboardLinux(): Promise<ImageInfo | null> {
-  let tempFile: string | null = null;
-  try {
-    // 第一步：检测剪贴板中是否有文件路径（当用户复制文件时）
-    // Linux 使用 xclip 检测文件路径
-    try {
-      const filePathCheck = await execAsync(
-        'xclip -selection clipboard -t text/uri-list -o 2>/dev/null || echo ""',
-      );
-      let filePath = filePathCheck.stdout.trim();
+// /**
+//  * 检测剪贴板中是否为图片（Linux）
+//  * 优化版本：先检测文件路径，再检测图片数据
+//  */
+// async function detectImageFromClipboardLinux(): Promise<ImageInfo | null> {
+//   let tempFile: string | null = null;
+//   try {
+//     // 第一步：检测剪贴板中是否有文件路径（当用户复制文件时）
+//     // Linux 使用 xclip 检测文件路径
+//     try {
+//       const filePathCheck = await execAsync(
+//         'xclip -selection clipboard -t text/uri-list -o 2>/dev/null || echo ""',
+//       );
+//       let filePath = filePathCheck.stdout.trim();
 
-      if (filePath) {
-        // 处理 file:// URL
-        if (filePath.startsWith('file://')) {
-          try {
-            const url = new URL(filePath);
-            filePath = url.pathname;
-            if (filePath.startsWith('//')) {
-              filePath = filePath.substring(2);
-            }
-          } catch (e) {
-            filePath = filePath.replace(/^file:\/\//, '');
-            try {
-              filePath = decodeURIComponent(filePath);
-            } catch {
-              filePath = filePath.replace(/%20/g, ' ');
-            }
-          }
-        }
+//       if (filePath) {
+//         // 处理 file:// URL
+//         if (filePath.startsWith('file://')) {
+//           try {
+//             const url = new URL(filePath);
+//             filePath = url.pathname;
+//             if (filePath.startsWith('//')) {
+//               filePath = filePath.substring(2);
+//             }
+//           } catch (e) {
+//             filePath = filePath.replace(/^file:\/\//, '');
+//             try {
+//               filePath = decodeURIComponent(filePath);
+//             } catch {
+//               filePath = filePath.replace(/%20/g, ' ');
+//             }
+//           }
+//         }
 
-        filePath = filePath.replace(/[\x00-\x1F\x7F]/g, '').trim();
-        filePath = path.normalize(filePath);
+//         filePath = filePath.replace(/[\x00-\x1F\x7F]/g, '').trim();
+//         filePath = path.normalize(filePath);
 
-        if (filePath && fs.existsSync(filePath)) {
-          const stats = statSync(filePath);
-          if (!stats.isFile()) {
-            return null;
-          }
+//         if (filePath && fs.existsSync(filePath)) {
+//           const stats = statSync(filePath);
+//           if (!stats.isFile()) {
+//             return null;
+//           }
 
-          const ext = path.extname(filePath).slice(1).toLowerCase();
-          if (!IMAGE_EXTENSIONS.includes(ext)) {
-            return null;
-          }
+//           const ext = path.extname(filePath).slice(1).toLowerCase();
+//           if (!IMAGE_EXTENSIONS.includes(ext)) {
+//             return null;
+//           }
 
-          if (stats.size > MAX_IMAGE_SIZE) {
-            vscode.window.showWarningMessage(
-              `Image is too large (${(stats.size / 1024 / 1024).toFixed(
-                2,
-              )}MB). Maximum size is ${MAX_IMAGE_SIZE / 1024 / 1024}MB.`,
-            );
-            return null;
-          }
+//           if (stats.size > MAX_IMAGE_SIZE) {
+//             vscode.window.showWarningMessage(
+//               `Image is too large (${(stats.size / 1024 / 1024).toFixed(
+//                 2,
+//               )}MB). Maximum size is ${MAX_IMAGE_SIZE / 1024 / 1024}MB.`,
+//             );
+//             return null;
+//           }
 
-          return {
-            tempFilePath: filePath,
-            extension: ext,
-          };
-        }
-      }
-    } catch (e) {
-      // 文件路径检测失败，继续检测图片数据
-    }
+//           return {
+//             tempFilePath: filePath,
+//             extension: ext,
+//           };
+//         }
+//       }
+//     } catch (e) {
+//       // 文件路径检测失败，继续检测图片数据
+//     }
 
-    // 第二步：检测剪贴板中的图片数据
-    // Linux 使用 xclip 检测剪贴板中的图片
-    // 首先检查是否有图片数据
-    const checkResult = await execAsync(
-      'xclip -selection clipboard -t TARGETS -o 2>/dev/null || echo ""',
-    );
-    const targets = checkResult.stdout;
+//     // 第二步：检测剪贴板中的图片数据
+//     // Linux 使用 xclip 检测剪贴板中的图片
+//     // 首先检查是否有图片数据
+//     const checkResult = await execAsync(
+//       'xclip -selection clipboard -t TARGETS -o 2>/dev/null || echo ""',
+//     );
+//     const targets = checkResult.stdout;
 
-    if (
-      !targets.includes('image/png') &&
-      !targets.includes('image/jpeg') &&
-      !targets.includes('image/gif')
-    ) {
-      return null;
-    }
+//     if (
+//       !targets.includes('image/png') &&
+//       !targets.includes('image/jpeg') &&
+//       !targets.includes('image/gif')
+//     ) {
+//       return null;
+//     }
 
-    // 确定格式
-    let format = 'png';
-    let mimeType = 'image/png';
-    if (targets.includes('image/jpeg')) {
-      format = 'jpg';
-      mimeType = 'image/jpeg';
-    } else if (targets.includes('image/gif')) {
-      format = 'gif';
-      mimeType = 'image/gif';
-    }
+//     // 确定格式
+//     let format = 'png';
+//     let mimeType = 'image/png';
+//     if (targets.includes('image/jpeg')) {
+//       format = 'jpg';
+//       mimeType = 'image/jpeg';
+//     } else if (targets.includes('image/gif')) {
+//       format = 'gif';
+//       mimeType = 'image/gif';
+//     }
 
-    const os = require('os');
-    tempFile = path.join(os.tmpdir(), `vscode-image-${Date.now()}.${format}`);
-    await execAsync(
-      `xclip -selection clipboard -t ${mimeType} -o > "${tempFile}" 2>/dev/null`,
-    );
+//     const os = require('os');
+//     tempFile = path.join(os.tmpdir(), `vscode-image-${Date.now()}.${format}`);
+//     await execAsync(
+//       `xclip -selection clipboard -t ${mimeType} -o > "${tempFile}" 2>/dev/null`,
+//     );
 
-    if (!tempFile || !fs.existsSync(tempFile)) {
-      return null;
-    }
+//     if (!tempFile || !fs.existsSync(tempFile)) {
+//       return null;
+//     }
 
-    // 检查文件大小
-    const stats = statSync(tempFile);
-    if (stats.size > MAX_IMAGE_SIZE) {
-      fs.unlinkSync(tempFile);
-      vscode.window.showWarningMessage(
-        `Image is too large (${(stats.size / 1024 / 1024).toFixed(
-          2,
-        )}MB). Maximum size is ${MAX_IMAGE_SIZE / 1024 / 1024}MB.`,
-      );
-      return null;
-    }
+//     // 检查文件大小
+//     const stats = statSync(tempFile);
+//     if (stats.size > MAX_IMAGE_SIZE) {
+//       fs.unlinkSync(tempFile);
+//       vscode.window.showWarningMessage(
+//         `Image is too large (${(stats.size / 1024 / 1024).toFixed(
+//           2,
+//         )}MB). Maximum size is ${MAX_IMAGE_SIZE / 1024 / 1024}MB.`,
+//       );
+//       return null;
+//     }
 
-    // 直接返回临时文件路径，避免读取到内存
-    return {
-      tempFilePath: tempFile,
-      extension: format,
-    };
-  } catch (error) {
-    if (tempFile && fs.existsSync(tempFile)) {
-      try {
-        fs.unlinkSync(tempFile);
-      } catch {}
-    }
-    return null;
-  }
-}
+//     // 直接返回临时文件路径，避免读取到内存
+//     return {
+//       tempFilePath: tempFile,
+//       extension: format,
+//     };
+//   } catch (error) {
+//     if (tempFile && fs.existsSync(tempFile)) {
+//       try {
+//         fs.unlinkSync(tempFile);
+//       } catch {}
+//     }
+//     return null;
+//   }
+// }
 
 /**
  * 根据平台检测剪贴板中的图片
@@ -954,9 +954,11 @@ export async function detectImageFromClipboard(): Promise<ImageInfo | null> {
     return await detectImageFromClipboardMac();
   } else if (platform === 'win32') {
     return await detectImageFromClipboardWindows();
-  } else if (platform === 'linux') {
-    return await detectImageFromClipboardLinux();
   }
+
+  // else if (platform === 'linux') {
+  //   return await detectImageFromClipboardLinux();
+  // }
 
   return null;
 }

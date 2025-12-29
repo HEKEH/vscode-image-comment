@@ -5,6 +5,7 @@
   "message.imageTooLarge": "图片过大（{0}MB）。最大大小为 {1}MB。",
   "message.noImageFound": "剪贴板中未找到图片。请先复制图片文件或截图。",
   "message.detectingImage": "正在检测剪贴板中的图片...",
-  "message.imageSaved": "图片已保存：{0}"
+  "message.imageSaved": "图片已保存：{0}",
+  "message.noSupportedPlatform": "此扩展仅支持 macOS 和 Windows"
 }
 

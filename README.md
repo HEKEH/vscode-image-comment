@@ -12,7 +12,7 @@ A VSCode extension that automatically saves pasted images and inserts comment re
 - 💾 **Auto-save images**: Saves images to a specified folder in the project directory (default: `.image-comment`)
 - 📝 **Auto-insert comments**: Automatically inserts image reference comments at the paste position
 - 🔧 **Smart comment format**: Automatically selects appropriate comment format based on file type (JavaScript, Python, HTML, Markdown, etc.)
-- 🌍 **Multi-platform support**: Supports macOS, Windows, and Linux
+- 🌍 **Multi-platform support**: Supports macOS and Windows
 
 ## 📦 Installation
 
@@ -42,7 +42,6 @@ For better image preview experience, we recommend installing the [Image Preview]
 
 - **macOS**: No additional tools required
 - **Windows**: Requires PowerShell (pre-installed on Windows 10+)
-- **Linux**: Requires `xclip` to be installed (`sudo apt-get install xclip` or your distribution's package manager)
 
 ## ❓ FAQ
 

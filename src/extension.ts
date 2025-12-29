@@ -15,6 +15,12 @@ async function handlePasteImageCommand(): Promise<void> {
     return;
   }
 
+  const platform = process.platform;
+  if (platform !== 'win32' && platform !== 'darwin') {
+    vscode.window.showWarningMessage(messages.noSupportedPlatform());
+    return;
+  }
+
   // 显示进度提示
   vscode.window.setStatusBarMessage(messages.detectingImage(), 1000);
 

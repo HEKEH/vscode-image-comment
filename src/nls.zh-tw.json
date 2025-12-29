@@ -5,6 +5,7 @@
   "message.imageTooLarge": "圖片過大（{0}MB）。最大大小為 {1}MB。",
   "message.noImageFound": "剪貼簿中未找到圖片。請先複製圖片檔案或截圖。",
   "message.detectingImage": "正在檢測剪貼簿中的圖片...",
-  "message.imageSaved": "圖片已儲存：{0}"
+  "message.imageSaved": "圖片已儲存：{0}",
+  "message.noSupportedPlatform": "此擴展僅支持 macOS 和 Windows"
 }
 
