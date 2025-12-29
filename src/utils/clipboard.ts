@@ -372,14 +372,16 @@ async function detectImageFromClipboardMac(): Promise<ImageInfo | null> {
 }
 
 /**
- * 检测剪贴板中是否为图片（Windows）
- * 优化版本：先检测文件路径，再检测图片数据
+ * 检测文件路径（Windows）
  */
-async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
+async function detectFilePathWindows(): Promise<ImageInfo | null> {
   const outputChannel = getLogger();
-  let tempFile: string | null = null;
   try {
-    // 第一步：检测剪贴板中是否有文件路径（当用户复制文件时）
+    outputChannel?.appendLine(
+      '[Image Comment] [Windows] Starting file path detection from clipboard',
+    );
+
+    // 检测剪贴板中是否有文件路径（当用户复制文件时）
     // 使用 Base64 编码避免转义问题
     // 设置 $ProgressPreference 来抑制进度输出
     const filePathScript = `$ProgressPreference = 'SilentlyContinue'; Add-Type -AssemblyName System.Windows.Forms; $fileList = [System.Windows.Forms.Clipboard]::GetFileDropList(); if ($fileList.Count -gt 0) { Write-Output $fileList[0] }`;
@@ -388,6 +390,9 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
     );
 
     try {
+      outputChannel?.appendLine(
+        '[Image Comment] [Windows] Executing PowerShell to detect file path',
+      );
       const filePathResult = await execAsync(
         `powershell -NoProfile -EncodedCommand ${encodedScript}`,
       );
@@ -396,13 +401,13 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
       const filteredStderr = filterPowerShellStderr(filePathResult.stderr);
       if (filteredStderr) {
         outputChannel?.appendLine(
-          `[Image Comment] PowerShell stderr: ${filteredStderr}`,
+          `[Image Comment] [Windows] PowerShell stderr: ${filteredStderr}`,
         );
       }
 
       let filePath = filePathResult.stdout.trim();
       outputChannel?.appendLine(
-        `[Image Comment] Detected file path: ${filePath || '(empty)'}`,
+        `[Image Comment] [Windows] Raw file path from clipboard: ${filePath || '(empty)'}`,
       );
 
       // 清理和验证文件路径（防止注入攻击）
@@ -411,11 +416,17 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
         filePath = filePath.replace(/[\x00-\x1F\x7F]/g, '').trim();
         // 路径规范化（处理 .. 和 . 以及多余的斜杠）
         filePath = path.normalize(filePath);
+        outputChannel?.appendLine(
+          `[Image Comment] [Windows] Normalized file path: ${filePath}`,
+        );
       }
 
       if (filePath) {
         try {
           if (!fs.existsSync(filePath)) {
+            outputChannel?.appendLine(
+              `[Image Comment] [Windows] File does not exist: ${filePath}`,
+            );
             return null;
           }
 
@@ -428,30 +439,51 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
                 ? statError.message
                 : String(statError);
             outputChannel?.appendLine(
-              `[Image Comment] Failed to get file stats: ${errorMessage}`,
+              `[Image Comment] [Windows] Failed to get file stats: ${errorMessage}`,
             );
             return null;
           }
 
           if (!stats.isFile()) {
+            outputChannel?.appendLine(
+              `[Image Comment] [Windows] Path is not a regular file: ${filePath}`,
+            );
             return null;
           }
 
           const ext = path.extname(filePath).slice(1).toLowerCase();
+          outputChannel?.appendLine(
+            `[Image Comment] [Windows] File extension: ${ext || '(none)'}`,
+          );
+
           if (!IMAGE_EXTENSIONS.includes(ext)) {
+            outputChannel?.appendLine(
+              `[Image Comment] [Windows] Unsupported image format: ${ext}`,
+            );
             return null;
           }
 
+          const fileSizeMB = (stats.size / 1024 / 1024).toFixed(2);
+          outputChannel?.appendLine(
+            `[Image Comment] [Windows] File size: ${fileSizeMB}MB`,
+          );
+
           if (stats.size > MAX_IMAGE_SIZE) {
+            outputChannel?.appendLine(
+              `[Image Comment] [Windows] File too large: ${fileSizeMB}MB (max: ${MAX_IMAGE_SIZE / 1024 / 1024}MB)`,
+            );
             vscode.window.showWarningMessage(
               messages.imageTooLarge(
-                (stats.size / 1024 / 1024).toFixed(2),
+                fileSizeMB,
                 (MAX_IMAGE_SIZE / 1024 / 1024).toString(),
               ),
             );
             return null;
           }
 
+          outputChannel?.appendLine(
+            `[Image Comment] [Windows] File path detection successful: ${filePath} (${ext})`,
+          );
           return {
             tempFilePath: filePath,
             extension: ext,
@@ -460,20 +492,55 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
           const errorMessage =
             fileError instanceof Error ? fileError.message : String(fileError);
           outputChannel?.appendLine(
-            `[Image Comment] File validation error: ${errorMessage}`,
+            `[Image Comment] [Windows] File validation error: ${errorMessage}`,
           );
           return null;
         }
+      } else {
+        outputChannel?.appendLine(
+          '[Image Comment] [Windows] No file path detected in clipboard',
+        );
       }
     } catch (e) {
-      // 文件路径检测失败，继续检测图片数据
+      // 文件路径检测失败
       const errorMessage = e instanceof Error ? e.message : String(e);
+      const errorStack = e instanceof Error ? e.stack : undefined;
       outputChannel?.appendLine(
-        `[Image Comment] File path detection failed: ${errorMessage}`,
+        `[Image Comment] [Windows] File path detection failed: ${errorMessage}`,
+      );
+      if (errorStack) {
+        outputChannel?.appendLine(
+          `[Image Comment] [Windows] Error stack: ${errorStack}`,
+        );
+      }
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    outputChannel?.appendLine(
+      `[Image Comment] [Windows] Unexpected error in detectFilePathWindows: ${errorMessage}`,
+    );
+    if (errorStack) {
+      outputChannel?.appendLine(
+        `[Image Comment] [Windows] Error stack: ${errorStack}`,
       );
     }
+  }
+  return null;
+}
 
-    // 第二步：检测剪贴板中的图片数据
+/**
+ * 检测剪贴板中的图片数据（Windows）
+ */
+async function detectImageDataWindows(): Promise<ImageInfo | null> {
+  const outputChannel = getLogger();
+  let tempFile: string | null = null;
+  try {
+    outputChannel?.appendLine(
+      '[Image Comment] [Windows] Starting image data detection from clipboard',
+    );
+
+    // 检测剪贴板中的图片数据
     const os = require('os');
     tempFile = path.join(os.tmpdir(), `vscode-image-${Date.now()}.png`);
 
@@ -488,6 +555,9 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
 
     let result;
     try {
+      outputChannel?.appendLine(
+        '[Image Comment] [Windows] Executing PowerShell to save image from clipboard',
+      );
       result = await execAsync(
         `powershell -NoProfile -EncodedCommand ${encodedImageScript}`,
       );
@@ -495,11 +565,11 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
       const errorMessage =
         execError instanceof Error ? execError.message : String(execError);
       outputChannel?.appendLine(
-        `[Image Comment] PowerShell execution failed: ${errorMessage}`,
+        `[Image Comment] [Windows] PowerShell execution failed: ${errorMessage}`,
       );
       if (execError instanceof Error && execError.stack) {
         outputChannel?.appendLine(
-          `[Image Comment] PowerShell error stack: ${execError.stack}`,
+          `[Image Comment] [Windows] PowerShell error stack: ${execError.stack}`,
         );
       }
       return null;
@@ -509,13 +579,16 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
     const filteredStderr = filterPowerShellStderr(result.stderr);
     if (filteredStderr) {
       outputChannel?.appendLine(
-        `[Image Comment] PowerShell stderr: ${filteredStderr}`,
+        `[Image Comment] [Windows] PowerShell stderr: ${filteredStderr}`,
       );
     }
 
     let outputFile: string | null = null;
     try {
       outputFile = result.stdout.trim();
+      outputChannel?.appendLine(
+        `[Image Comment] [Windows] PowerShell output: ${outputFile || '(empty)'}`,
+      );
 
       // 清理和验证输出文件路径
       if (outputFile) {
@@ -523,11 +596,14 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
         outputFile = outputFile.replace(/[\x00-\x1F\x7F]/g, '').trim();
         // 路径规范化
         outputFile = path.normalize(outputFile);
+        outputChannel?.appendLine(
+          `[Image Comment] [Windows] Normalized output file path: ${outputFile}`,
+        );
       }
 
       if (!outputFile || !fs.existsSync(outputFile)) {
         outputChannel?.appendLine(
-          `[Image Comment] PowerShell output file not found or invalid: ${
+          `[Image Comment] [Windows] PowerShell output file not found or invalid: ${
             outputFile || 'empty'
           }`,
         );
@@ -543,7 +619,7 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
       ) {
         // 文件不在临时目录中，可能是安全问题，删除并返回
         outputChannel?.appendLine(
-          `[Image Comment] Security warning: Output file is outside temp directory. TempDir: ${normalizedTempDir}, OutputFile: ${normalizedOutputFile}`,
+          `[Image Comment] [Windows] Security warning: Output file is outside temp directory. TempDir: ${normalizedTempDir}, OutputFile: ${normalizedOutputFile}`,
         );
         try {
           if (fs.existsSync(normalizedOutputFile)) {
@@ -552,7 +628,7 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
         } catch (e) {
           const errorMessage = e instanceof Error ? e.message : String(e);
           outputChannel?.appendLine(
-            `[Image Comment] Failed to delete suspicious file: ${errorMessage}`,
+            `[Image Comment] [Windows] Failed to delete suspicious file: ${errorMessage}`,
           );
         }
         return null;
@@ -566,10 +642,15 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
         const errorMessage =
           statError instanceof Error ? statError.message : String(statError);
         outputChannel?.appendLine(
-          `[Image Comment] Failed to get file stats: ${errorMessage}`,
+          `[Image Comment] [Windows] Failed to get file stats: ${errorMessage}`,
         );
         return null;
       }
+
+      const fileSizeMB = (stats.size / 1024 / 1024).toFixed(2);
+      outputChannel?.appendLine(
+        `[Image Comment] [Windows] Image file size: ${fileSizeMB}MB`,
+      );
 
       if (stats.size > MAX_IMAGE_SIZE) {
         try {
@@ -580,18 +661,23 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
               ? unlinkError.message
               : String(unlinkError);
           outputChannel?.appendLine(
-            `[Image Comment] Failed to delete oversized file: ${errorMessage}`,
+            `[Image Comment] [Windows] Failed to delete oversized file: ${errorMessage}`,
           );
         }
+        outputChannel?.appendLine(
+          `[Image Comment] [Windows] File too large: ${fileSizeMB}MB (max: ${MAX_IMAGE_SIZE / 1024 / 1024}MB)`,
+        );
         vscode.window.showWarningMessage(
-          `Image is too large (${(stats.size / 1024 / 1024).toFixed(
-            2,
-          )}MB). Maximum size is ${MAX_IMAGE_SIZE / 1024 / 1024}MB.`,
+          `Image is too large (${fileSizeMB}MB). Maximum size is ${MAX_IMAGE_SIZE / 1024 / 1024}MB.`,
         );
         return null;
       }
 
       const extension = path.extname(outputFile).slice(1).toLowerCase();
+      outputChannel?.appendLine(
+        `[Image Comment] [Windows] Image extension: ${extension || '(none)'}`,
+      );
+
       if (!IMAGE_EXTENSIONS.includes(extension)) {
         try {
           fs.unlinkSync(outputFile);
@@ -601,12 +687,18 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
               ? unlinkError.message
               : String(unlinkError);
           outputChannel?.appendLine(
-            `[Image Comment] Failed to delete unsupported file: ${errorMessage}`,
+            `[Image Comment] [Windows] Failed to delete unsupported file: ${errorMessage}`,
           );
         }
+        outputChannel?.appendLine(
+          `[Image Comment] [Windows] Unsupported image format: ${extension}`,
+        );
         return null;
       }
 
+      outputChannel?.appendLine(
+        `[Image Comment] [Windows] Image data detection successful: ${outputFile} (${extension})`,
+      );
       // 直接返回临时文件路径，避免读取到内存
       return {
         tempFilePath: outputFile,
@@ -616,11 +708,11 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
       const errorMessage =
         fileError instanceof Error ? fileError.message : String(fileError);
       outputChannel?.appendLine(
-        `[Image Comment] File processing error: ${errorMessage}`,
+        `[Image Comment] [Windows] File processing error: ${errorMessage}`,
       );
       if (fileError instanceof Error && fileError.stack) {
         outputChannel?.appendLine(
-          `[Image Comment] File processing stack: ${fileError.stack}`,
+          `[Image Comment] [Windows] File processing stack: ${fileError.stack}`,
         );
       }
       // 清理可能创建的文件
@@ -628,7 +720,13 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
         try {
           fs.unlinkSync(outputFile);
         } catch (cleanupError) {
-          // 忽略清理错误
+          const cleanupErrorMessage =
+            cleanupError instanceof Error
+              ? cleanupError.message
+              : String(cleanupError);
+          outputChannel?.appendLine(
+            `[Image Comment] [Windows] Failed to cleanup file: ${cleanupErrorMessage}`,
+          );
         }
       }
       return null;
@@ -637,10 +735,12 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
     outputChannel?.appendLine(
-      `[Image Comment] Error in detectImageFromClipboardWindows: ${errorMessage}`,
+      `[Image Comment] [Windows] Unexpected error in detectImageDataWindows: ${errorMessage}`,
     );
     if (errorStack) {
-      outputChannel?.appendLine(`[Image Comment] Stack trace: ${errorStack}`);
+      outputChannel?.appendLine(
+        `[Image Comment] [Windows] Error stack: ${errorStack}`,
+      );
     }
     if (tempFile && fs.existsSync(tempFile)) {
       try {
@@ -651,12 +751,66 @@ async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
             ? cleanupError.message
             : String(cleanupError);
         outputChannel?.appendLine(
-          `[Image Comment] Failed to cleanup temp file ${tempFile}: ${cleanupErrorMessage}`,
+          `[Image Comment] [Windows] Failed to cleanup temp file ${tempFile}: ${cleanupErrorMessage}`,
         );
       }
     }
     return null;
   }
+}
+
+/**
+ * 检测剪贴板中是否为图片（Windows）
+ * 优化版本：并行检测文件路径和图片数据
+ */
+async function detectImageFromClipboardWindows(): Promise<ImageInfo | null> {
+  const outputChannel = getLogger();
+  // 并行执行文件路径检测和图片数据检测
+  const [filePathResult, imageDataResult] = await Promise.all([
+    detectFilePathWindows(),
+    detectImageDataWindows(),
+  ]);
+
+  // 优先返回文件路径检测的结果（如果成功）
+  if (filePathResult) {
+    // 如果图片数据检测也成功了，清理临时文件
+    if (imageDataResult && imageDataResult.tempFilePath !== filePathResult.tempFilePath) {
+      const os = require('os');
+      const tempDir = os.tmpdir();
+      if (imageDataResult.tempFilePath.startsWith(tempDir)) {
+        outputChannel?.appendLine(
+          `[Image Comment] [Windows] Cleaning up temporary image data file: ${imageDataResult.tempFilePath}`,
+        );
+        try {
+          fs.unlinkSync(imageDataResult.tempFilePath);
+        } catch (cleanupError) {
+          const cleanupErrorMessage =
+            cleanupError instanceof Error
+              ? cleanupError.message
+              : String(cleanupError);
+          outputChannel?.appendLine(
+            `[Image Comment] [Windows] Failed to cleanup temp file: ${cleanupErrorMessage}`,
+          );
+        }
+      }
+    }
+    outputChannel?.appendLine(
+      '[Image Comment] [Windows] Returning file path result (priority)',
+    );
+    return filePathResult;
+  }
+
+  // 如果文件路径检测失败，返回图片数据检测的结果
+  if (imageDataResult) {
+    outputChannel?.appendLine(
+      '[Image Comment] [Windows] Returning image data result (fallback)',
+    );
+  } else {
+    outputChannel?.appendLine(
+      '[Image Comment] [Windows] No image detected in clipboard',
+    );
+  }
+  return imageDataResult;
 }
 
 /**
