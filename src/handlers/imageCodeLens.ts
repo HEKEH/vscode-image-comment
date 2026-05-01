@@ -68,13 +68,13 @@ export async function handlePreviewImageCommand(
     );
 
     if (!match) {
-      vscode.window.showInformationMessage('No image comment found at cursor position');
+      vscode.window.showInformationMessage(messages.noImageCommentFound());
       return;
     }
 
     const resolvedUri = resolveImagePath(match.imagePath, editor.document.uri);
     if (!resolvedUri) {
-      vscode.window.showErrorMessage('Could not resolve image path');
+      vscode.window.showErrorMessage(messages.failedToResolveImagePath());
       return;
     }
     imageUri = resolvedUri;
@@ -82,7 +82,7 @@ export async function handlePreviewImageCommand(
   }
 
   if (!imageUri) {
-    vscode.window.showErrorMessage('Could not resolve image path');
+    vscode.window.showErrorMessage(messages.failedToResolveImagePath());
     return;
   }
 
@@ -94,7 +94,7 @@ export async function handlePreviewImageCommand(
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    vscode.window.showErrorMessage(`Failed to open image: ${errorMessage}`);
+    vscode.window.showErrorMessage(messages.failedToOpenImage(errorMessage));
   }
 }
 
@@ -121,7 +121,7 @@ export async function handleDeleteImageCommentCommand(
     );
 
     if (!match) {
-      vscode.window.showInformationMessage('No image comment found at cursor position');
+      vscode.window.showInformationMessage(messages.noImageCommentFound());
       return;
     }
 
@@ -130,14 +130,17 @@ export async function handleDeleteImageCommentCommand(
     documentUri = editor.document.uri;
   }
 
+  const deleteButton = messages.deleteButton();
+  const cancelButton = messages.cancelButton();
+
   const confirm = await vscode.window.showWarningMessage(
-    `确定要删除此图片注释及其关联图片吗？\n图片路径: ${imagePath}`,
+    messages.deleteConfirmMessage(imagePath),
     { modal: true },
-    'Delete',
-    'Cancel'
+    deleteButton,
+    cancelButton
   );
 
-  if (confirm !== 'Delete') {
+  if (confirm !== deleteButton) {
     return;
   }
 
@@ -152,23 +155,23 @@ export async function handleDeleteImageCommentCommand(
     });
 
     if (!success) {
-      vscode.window.showErrorMessage('Failed to delete comment from editor');
+      vscode.window.showErrorMessage(messages.failedToDeleteComment());
       return;
     }
   } else {
-    vscode.window.showWarningMessage('Comment not in active editor, only deleting image file');
+    vscode.window.showWarningMessage(messages.commentNotInActiveEditor());
   }
 
   const imageUri = resolveImagePath(imagePath, documentUri);
   if (imageUri) {
     try {
       await fs.promises.unlink(imageUri.fsPath);
-      vscode.window.showInformationMessage(`已删除图片注释和关联图片: ${imagePath}`);
+      vscode.window.showInformationMessage(messages.deleteCommentAndImageSuccess(imagePath));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      vscode.window.showWarningMessage(`注释已删除，但删除图片时出错: ${errorMessage}`);
+      vscode.window.showWarningMessage(messages.deleteImageError(errorMessage));
     }
   } else {
-    vscode.window.showInformationMessage(`已删除图片注释: ${imagePath}`);
+    vscode.window.showInformationMessage(messages.deleteCommentSuccess(imagePath));
   }
 }

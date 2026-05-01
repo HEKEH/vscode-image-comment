@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { DEFAULT_COMMENT_TEMPLATE } from '../utils/constants';
 import { findImageCommentsInDocument, resolveImagePath } from '../utils/preview';
+import { messages } from '../nls';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -93,9 +94,7 @@ export class ImageDecorationProvider {
           const currentLineText = event.document.lineAt(commentLine).text;
 
           if (currentLineText !== comment.text) {
-            vscode.window.showWarningMessage(
-              '⚠️ 图片注释为只读状态，禁止手动编辑。请使用上方的 "Delete" 按钮删除此注释。'
-            );
+            vscode.window.showWarningMessage(messages.readonlyWarning());
             break;
           }
         }

@@ -90,4 +90,30 @@ export const messages = {
     localize('message.imageSaved', defaultMessages['message.imageSaved'], fileName),
   noSupportedPlatform: () =>
     localize('message.noSupportedPlatform', defaultMessages['message.noSupportedPlatform']),
+  deleteConfirmTitle: () =>
+    localize('message.deleteConfirmTitle', defaultMessages['message.deleteConfirmTitle']),
+  deleteConfirmMessage: (imagePath: string) =>
+    localize('message.deleteConfirmMessage', defaultMessages['message.deleteConfirmMessage'], imagePath),
+  deleteButton: () =>
+    localize('message.deleteButton', defaultMessages['message.deleteButton']),
+  cancelButton: () =>
+    localize('message.cancelButton', defaultMessages['message.cancelButton']),
+  noImageCommentFound: () =>
+    localize('message.noImageCommentFound', defaultMessages['message.noImageCommentFound']),
+  failedToResolveImagePath: () =>
+    localize('message.failedToResolveImagePath', defaultMessages['message.failedToResolveImagePath']),
+  failedToOpenImage: (error: string) =>
+    localize('message.failedToOpenImage', defaultMessages['message.failedToOpenImage'], error),
+  failedToDeleteComment: () =>
+    localize('message.failedToDeleteComment', defaultMessages['message.failedToDeleteComment']),
+  commentNotInActiveEditor: () =>
+    localize('message.commentNotInActiveEditor', defaultMessages['message.commentNotInActiveEditor']),
+  deleteCommentAndImageSuccess: (imagePath: string) =>
+    localize('message.deleteCommentAndImageSuccess', defaultMessages['message.deleteCommentAndImageSuccess'], imagePath),
+  deleteCommentSuccess: (imagePath: string) =>
+    localize('message.deleteCommentSuccess', defaultMessages['message.deleteCommentSuccess'], imagePath),
+  deleteImageError: (error: string) =>
+    localize('message.deleteImageError', defaultMessages['message.deleteImageError'], error),
+  readonlyWarning: () =>
+    localize('message.readonlyWarning', defaultMessages['message.readonlyWarning']),
 };

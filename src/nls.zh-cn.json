@@ -6,6 +6,19 @@
   "message.noImageFound": "剪贴板中未找到图片。请先复制图片文件或截图。",
   "message.detectingImage": "正在检测剪贴板中的图片...",
   "message.imageSaved": "图片已保存：{0}",
-  "message.noSupportedPlatform": "此扩展仅支持 macOS 和 Windows"
+  "message.noSupportedPlatform": "此扩展仅支持 macOS 和 Windows",
+  "message.deleteConfirmTitle": "删除图片注释",
+  "message.deleteConfirmMessage": "确定要删除此图片注释及其关联图片吗？\n图片路径：{0}",
+  "message.deleteButton": "删除",
+  "message.cancelButton": "取消",
+  "message.noImageCommentFound": "光标位置未找到图片注释",
+  "message.failedToResolveImagePath": "无法解析图片路径",
+  "message.failedToOpenImage": "打开图片失败：{0}",
+  "message.failedToDeleteComment": "从编辑器删除注释失败",
+  "message.commentNotInActiveEditor": "注释不在活动编辑器中，仅删除图片文件",
+  "message.deleteCommentAndImageSuccess": "已删除图片注释和关联图片：{0}",
+  "message.deleteCommentSuccess": "已删除图片注释：{0}",
+  "message.deleteImageError": "注释已删除，但删除图片时出错：{0}",
+  "message.readonlyWarning": "⚠️ 图片注释为只读状态，禁止手动编辑。请使用上方的 \"Delete\" 按钮删除此注释。"
 }
 

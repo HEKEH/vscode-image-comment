@@ -6,6 +6,19 @@
   "message.noImageFound": "剪貼簿中未找到圖片。請先複製圖片檔案或截圖。",
   "message.detectingImage": "正在檢測剪貼簿中的圖片...",
   "message.imageSaved": "圖片已儲存：{0}",
-  "message.noSupportedPlatform": "此擴展僅支持 macOS 和 Windows"
+  "message.noSupportedPlatform": "此擴展僅支持 macOS 和 Windows",
+  "message.deleteConfirmTitle": "刪除圖片註釋",
+  "message.deleteConfirmMessage": "確定要刪除此圖片註釋及其關聯圖片嗎？\n圖片路徑：{0}",
+  "message.deleteButton": "刪除",
+  "message.cancelButton": "取消",
+  "message.noImageCommentFound": "游標位置未找到圖片註釋",
+  "message.failedToResolveImagePath": "無法解析圖片路徑",
+  "message.failedToOpenImage": "打開圖片失敗：{0}",
+  "message.failedToDeleteComment": "從編輯器刪除註釋失敗",
+  "message.commentNotInActiveEditor": "註釋不在活動編輯器中，僅刪除圖片檔案",
+  "message.deleteCommentAndImageSuccess": "已刪除圖片註釋和關聯圖片：{0}",
+  "message.deleteCommentSuccess": "已刪除圖片註釋：{0}",
+  "message.deleteImageError": "註釋已刪除，但刪除圖片時出錯：{0}",
+  "message.readonlyWarning": "⚠️ 圖片註釋為唯讀狀態，禁止手動編輯。請使用上方的 \"Delete\" 按鈕刪除此註釋。"
 }
 
