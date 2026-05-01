@@ -75,6 +75,11 @@
         "command": "imageComment.previewImage",
         "title": "%command.previewImage.title%",
         "icon": "$(eye)"
+      },
+      {
+        "command": "imageComment.deleteImageComment",
+        "title": "Delete Image Comment",
+        "icon": "$(trash)"
       }
     ],
     "menus": {

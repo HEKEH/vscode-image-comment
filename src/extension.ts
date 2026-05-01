@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { detectImageFromClipboard } from './utils/clipboard';
 import { handleImagePaste } from './handlers/imagePaste';
-import { ImagePreviewHoverProvider } from './handlers/imagePreview';
 import {
   ImagePreviewCodeLensProvider,
   handlePreviewImageCommand,
+  handleDeleteImageCommentCommand,
 } from './handlers/imageCodeLens';
 import { registerImageDecorationProvider } from './handlers/imageDecoration';
 import { initializeLogger } from './utils/logger';
@@ -65,11 +65,11 @@ export function activate(context: vscode.ExtensionContext) {
   );
   context.subscriptions.push(previewImageCommand);
 
-  const hoverProvider = vscode.languages.registerHoverProvider(
-    '*',
-    new ImagePreviewHoverProvider(),
+  const deleteImageCommentCommand = vscode.commands.registerCommand(
+    'imageComment.deleteImageComment',
+    handleDeleteImageCommentCommand,
   );
-  context.subscriptions.push(hoverProvider);
+  context.subscriptions.push(deleteImageCommentCommand);
 
   const codeLensProvider = vscode.languages.registerCodeLensProvider(
     '*',
