@@ -1,0 +1,195 @@
+import * as vscode from 'vscode';
+import { DEFAULT_COMMENT_TEMPLATE } from '../utils/constants';
+import { findImageCommentsInDocument, resolveImagePath } from '../utils/preview';
+import { getLogger } from '../utils/logger';
+import * as path from 'path';
+import * as fs from 'fs';
+
+export class ImageDecorationProvider {
+  private imageCommentDecoration: vscode.TextEditorDecorationType;
+  private context: vscode.ExtensionContext;
+
+  constructor(context: vscode.ExtensionContext) {
+    this.context = context;
+    this.imageCommentDecoration = this.createDecorationType();
+  }
+
+  private createDecorationType(): vscode.TextEditorDecorationType {
+    const config = vscode.workspace.getConfiguration('imageComment');
+    const showGutterIcon = config.get<boolean>('showGutterIcon', true);
+    const showInlineIcon = config.get<boolean>('showInlineIcon', true);
+    const highlightBackground = config.get<boolean>('highlightBackground', true);
+
+    const decorationOptions: vscode.DecorationRenderOptions = {
+      before: showInlineIcon
+        ? {
+            contentIconPath: this.getIconPath('icon.svg'),
+            margin: '0 4px 0 0',
+            width: '16px',
+            height: '16px',
+          }
+        : undefined,
+      overviewRulerLane: vscode.OverviewRulerLane.Right,
+      overviewRulerColor: 'rgba(255, 140, 0, 0.7)',
+    };
+
+    if (showGutterIcon) {
+      decorationOptions.gutterIconPath = this.getIconPath('icon.svg');
+      decorationOptions.gutterIconSize = '16px';
+    }
+
+    if (highlightBackground) {
+      const theme = vscode.window.activeColorTheme;
+      const isDark = theme.kind === vscode.ColorThemeKind.Dark || theme.kind === vscode.ColorThemeKind.HighContrast;
+
+      decorationOptions.backgroundColor = isDark
+        ? 'rgba(255, 140, 0, 0.1)'
+        : 'rgba(255, 140, 0, 0.05)';
+
+      decorationOptions.border = isDark
+        ? '1px solid rgba(255, 140, 0, 0.2)'
+        : '1px solid rgba(255, 140, 0, 0.15)';
+
+      decorationOptions.borderRadius = '3px';
+    }
+
+    return vscode.window.createTextEditorDecorationType(decorationOptions);
+  }
+
+  private getIconPath(iconName: string): vscode.Uri {
+    const iconPath = path.join(this.context.extensionPath, 'images', iconName);
+    if (fs.existsSync(iconPath)) {
+      return vscode.Uri.file(iconPath);
+    }
+    return vscode.Uri.file(path.join(this.context.extensionPath, 'images', 'icon.png'));
+  }
+
+  public updateDecorations(editor: vscode.TextEditor | undefined): void {
+    if (!editor) {
+      return;
+    }
+
+    const config = vscode.workspace.getConfiguration('imageComment');
+    const template = config.get<string>('commentTemplate', DEFAULT_COMMENT_TEMPLATE);
+    const enableDecorations = config.get<boolean>('enableDecorations', true);
+
+    if (!enableDecorations) {
+      editor.setDecorations(this.imageCommentDecoration, []);
+      return;
+    }
+
+    const matches = findImageCommentsInDocument(editor.document, template);
+    const decorations: vscode.DecorationOptions[] = [];
+
+    for (const match of matches) {
+      const imageUri = resolveImagePath(match.imagePath, editor.document.uri);
+      if (imageUri) {
+        const decorationRange = new vscode.Range(
+          new vscode.Position(match.range.start.line, 0),
+          new vscode.Position(match.range.start.line, match.range.end.character),
+        );
+
+        decorations.push({
+          range: decorationRange,
+          hoverMessage: this.createDecoratorHoverMessage(imageUri, match.imagePath),
+        });
+      }
+    }
+
+    editor.setDecorations(this.imageCommentDecoration, decorations);
+  }
+
+  private createDecoratorHoverMessage(imageUri: vscode.Uri, imagePath: string): vscode.MarkdownString {
+    const markdown = new vscode.MarkdownString();
+    markdown.isTrusted = true;
+    markdown.supportHtml = true;
+
+    const encodedUri = imageUri.toString(true);
+    const fsPath = imageUri.fsPath;
+
+    let fileSize = '';
+    try {
+      const stats = fs.statSync(fsPath);
+      fileSize = this.formatFileSize(stats.size);
+    } catch {}
+
+    markdown.appendMarkdown(`<div style="padding: 4px 0;">`);
+    markdown.appendMarkdown(`<strong style="color: #ff8c00;">📷 图片注释</strong><br>`);
+    markdown.appendMarkdown(`<span style="font-size: 12px; opacity: 0.8;">`);
+    markdown.appendMarkdown(`路径: ${imagePath}`);
+    if (fileSize) {
+      markdown.appendMarkdown(`<br>大小: ${fileSize}`);
+    }
+    markdown.appendMarkdown(`</span><br><br>`);
+    markdown.appendMarkdown(`![Preview](${encodedUri}|width=400)`);
+    markdown.appendMarkdown(`</div>`);
+
+    return markdown;
+  }
+
+  private formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  public refresh(): void {
+    this.imageCommentDecoration.dispose();
+    this.imageCommentDecoration = this.createDecorationType();
+
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+      this.updateDecorations(editor);
+    }
+  }
+
+  public dispose(): void {
+    this.imageCommentDecoration.dispose();
+  }
+}
+
+export function registerImageDecorationProvider(
+  context: vscode.ExtensionContext,
+): ImageDecorationProvider {
+  const provider = new ImageDecorationProvider(context);
+
+  if (vscode.window.activeTextEditor) {
+    provider.updateDecorations(vscode.window.activeTextEditor);
+  }
+
+  vscode.window.onDidChangeActiveTextEditor(
+    (editor) => {
+      provider.updateDecorations(editor);
+    },
+    null,
+    context.subscriptions,
+  );
+
+  vscode.workspace.onDidChangeTextDocument(
+    (event) => {
+      if (vscode.window.activeTextEditor && event.document === vscode.window.activeTextEditor.document) {
+        provider.updateDecorations(vscode.window.activeTextEditor);
+      }
+    },
+    null,
+    context.subscriptions,
+  );
+
+  vscode.workspace.onDidChangeConfiguration(
+    (event) => {
+      if (event.affectsConfiguration('imageComment')) {
+        provider.refresh();
+      }
+    },
+    null,
+    context.subscriptions,
+  );
+
+  context.subscriptions.push({
+    dispose: () => provider.dispose(),
+  });
+
+  return provider;
+}

@@ -6,6 +6,7 @@ import {
   ImagePreviewCodeLensProvider,
   handlePreviewImageCommand,
 } from './handlers/imageCodeLens';
+import { registerImageDecorationProvider } from './handlers/imageDecoration';
 import { initializeLogger } from './utils/logger';
 import { messages } from './nls';
 import { ImageInfo } from './utils/types';
@@ -75,6 +76,8 @@ export function activate(context: vscode.ExtensionContext) {
     new ImagePreviewCodeLensProvider(),
   );
   context.subscriptions.push(codeLensProvider);
+
+  registerImageDecorationProvider(context);
 }
 
 export function deactivate() {}
