@@ -31,15 +31,15 @@ export class ImageDecorationProvider {
     if (highlightBackground) {
       const theme = vscode.window.activeColorTheme;
       const isDark = theme.kind === vscode.ColorThemeKind.Dark || theme.kind === vscode.ColorThemeKind.HighContrast;
-      
+
       decorationOptions.backgroundColor = isDark
         ? 'rgba(255, 140, 0, 0.08)'
         : 'rgba(255, 140, 0, 0.04)';
-      
+
       decorationOptions.border = isDark
         ? '1px dashed rgba(255, 140, 0, 0.15)'
         : '1px dashed rgba(255, 140, 0, 0.1)';
-      
+
       decorationOptions.borderRadius = '2px';
     }
 
@@ -81,7 +81,6 @@ export class ImageDecorationProvider {
 
         decorations.push({
           range: decorationRange,
-          hoverMessage: this.createEnhancedHoverMessage(imageUri, match.imagePath),
         });
       }
     }
@@ -89,47 +88,10 @@ export class ImageDecorationProvider {
     editor.setDecorations(this.imageCommentDecoration, decorations);
   }
 
-  private createEnhancedHoverMessage(imageUri: vscode.Uri, imagePath: string): vscode.MarkdownString {
-    const markdown = new vscode.MarkdownString();
-    markdown.isTrusted = true;
-
-    const encodedUri = imageUri.toString(true);
-    const fsPath = imageUri.fsPath;
-    
-    let fileSize = '';
-    
-    try {
-      const stats = fs.statSync(fsPath);
-      fileSize = this.formatFileSize(stats.size);
-    } catch {}
-
-    markdown.appendMarkdown(`**📷 图片注释**\n\n`);
-    markdown.appendMarkdown(`**路径:** \`${imagePath}\`\n\n`);
-    
-    if (fileSize) {
-      markdown.appendMarkdown(`**大小:** ${fileSize}\n\n`);
-    }
-
-    markdown.appendMarkdown(`---\n\n`);
-    markdown.appendMarkdown(`![Preview](${encodedUri}|width=300)\n\n`);
-    markdown.appendMarkdown(`---\n\n`);
-    markdown.appendMarkdown(`💡 *点击上方 "Preview Image" 按钮查看大图*`);
-
-    return markdown;
-  }
-
-  private formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
-
   public refresh(): void {
     this.imageCommentDecoration.dispose();
     this.imageCommentDecoration = this.createDecorationType();
-    
+
     const editor = vscode.window.activeTextEditor;
     if (editor) {
       this.updateDecorations(editor);

@@ -124,13 +124,45 @@ export function findImageCommentsInDocument(
   return results;
 }
 
-export function createImageHoverContent(imageUri: vscode.Uri): vscode.MarkdownString {
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+export function createImageHoverContent(
+  imageUri: vscode.Uri,
+  imagePath?: string
+): vscode.MarkdownString {
   const markdown = new vscode.MarkdownString();
   markdown.isTrusted = true;
 
   const encodedUri = imageUri.toString(true);
+  const fsPath = imageUri.fsPath;
 
-  markdown.appendMarkdown(`![Preview](${encodedUri}|width=600)`);
+  let fileSize = '';
+
+  try {
+    const stats = fs.statSync(fsPath);
+    fileSize = formatFileSize(stats.size);
+  } catch {}
+
+  markdown.appendMarkdown(`**📷 图片注释**\n\n`);
+
+  if (imagePath) {
+    markdown.appendMarkdown(`**路径:** \`${imagePath}\`\n\n`);
+  }
+
+  if (fileSize) {
+    markdown.appendMarkdown(`**大小:** ${fileSize}\n\n`);
+  }
+
+  markdown.appendMarkdown(`---\n\n`);
+  markdown.appendMarkdown(`![Preview](${encodedUri}|width=600)\n\n`);
+  markdown.appendMarkdown(`---\n\n`);
+  markdown.appendMarkdown(`💡 *点击上方 "Preview Image" 按钮查看大图*`);
 
   return markdown;
 }

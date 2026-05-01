@@ -25,7 +25,7 @@ export class ImagePreviewHoverProvider implements vscode.HoverProvider {
       return null;
     }
 
-    const hoverContent = createImageHoverContent(imageUri);
+    const hoverContent = createImageHoverContent(imageUri, match.imagePath);
 
     return new vscode.Hover(hoverContent, match.range);
   }
