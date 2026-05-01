@@ -58,11 +58,6 @@
           "default": true,
           "description": "%config.showGutterIcon.description%"
         },
-        "imageComment.showInlineIcon": {
-          "type": "boolean",
-          "default": true,
-          "description": "%config.showInlineIcon.description%"
-        },
         "imageComment.highlightBackground": {
           "type": "boolean",
           "default": true,

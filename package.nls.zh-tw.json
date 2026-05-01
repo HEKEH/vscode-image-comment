@@ -5,7 +5,6 @@
   "config.useRelativePath.description": "在註解中使用相對路徑",
   "config.enableDecorations.description": "為圖片註解啟用視覺裝飾",
   "config.showGutterIcon.description": "在圖片註解的行號區域顯示圖示",
-  "config.showInlineIcon.description": "在圖片註解文字前顯示行內圖示",
   "config.highlightBackground.description": "高亮圖片註解行的背景",
   "command.pasteImage.title": "貼上圖片為註解",
   "command.previewImage.title": "預覽圖片註解",

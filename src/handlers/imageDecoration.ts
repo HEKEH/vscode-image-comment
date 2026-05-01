@@ -16,18 +16,9 @@ export class ImageDecorationProvider {
   private createDecorationType(): vscode.TextEditorDecorationType {
     const config = vscode.workspace.getConfiguration('imageComment');
     const showGutterIcon = config.get<boolean>('showGutterIcon', true);
-    const showInlineIcon = config.get<boolean>('showInlineIcon', true);
     const highlightBackground = config.get<boolean>('highlightBackground', true);
 
     const decorationOptions: vscode.DecorationRenderOptions = {
-      before: showInlineIcon
-        ? {
-            contentIconPath: this.getIconPath('icon.svg'),
-            margin: '0 6px 0 0',
-            width: '14px',
-            height: '14px',
-          }
-        : undefined,
       overviewRulerLane: vscode.OverviewRulerLane.Right,
       overviewRulerColor: 'rgba(255, 140, 0, 0.6)',
     };
@@ -101,50 +92,28 @@ export class ImageDecorationProvider {
   private createEnhancedHoverMessage(imageUri: vscode.Uri, imagePath: string): vscode.MarkdownString {
     const markdown = new vscode.MarkdownString();
     markdown.isTrusted = true;
-    markdown.supportHtml = true;
 
     const encodedUri = imageUri.toString(true);
     const fsPath = imageUri.fsPath;
     
     let fileSize = '';
-    let imageDimensions = '';
     
     try {
       const stats = fs.statSync(fsPath);
       fileSize = this.formatFileSize(stats.size);
     } catch {}
 
-    const theme = vscode.window.activeColorTheme;
-    const isDark = theme.kind === vscode.ColorThemeKind.Dark || theme.kind === vscode.ColorThemeKind.HighContrast;
+    markdown.appendMarkdown(`**📷 图片注释**\n\n`);
+    markdown.appendMarkdown(`**路径:** \`${imagePath}\`\n\n`);
     
-    const borderColor = isDark ? '#333' : '#e0e0e0';
-    const textColor = isDark ? '#cccccc' : '#666666';
-    const accentColor = '#ff8c00';
-
-    markdown.appendMarkdown(`<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 320px;">`);
-    
-    markdown.appendMarkdown(`<div style="display: flex; align-items: center; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid ${borderColor};">`);
-    markdown.appendMarkdown(`<span style="font-size: 16px; margin-right: 8px;">📷</span>`);
-    markdown.appendMarkdown(`<span style="font-weight: 600; font-size: 14px; color: ${accentColor};">图片注释</span>`);
-    markdown.appendMarkdown(`</div>`);
-
-    markdown.appendMarkdown(`<div style="font-size: 12px; line-height: 1.6; color: ${textColor}; margin-bottom: 10px;">`);
-    markdown.appendMarkdown(`<div style="margin-bottom: 4px;"><strong>路径:</strong> ${imagePath}</div>`);
     if (fileSize) {
-      markdown.appendMarkdown(`<div><strong>大小:</strong> ${fileSize}</div>`);
+      markdown.appendMarkdown(`**大小:** ${fileSize}\n\n`);
     }
-    markdown.appendMarkdown(`</div>`);
 
-    markdown.appendMarkdown(`<div style="border: 1px solid ${borderColor}; border-radius: 4px; overflow: hidden; background: ${isDark ? '#1e1e1e' : '#fafafa'};">`);
-    markdown.appendMarkdown(`<div style="padding: 4px; text-align: center;">`);
-    markdown.appendMarkdown(`![Preview](${encodedUri}|width=280)`);
-    markdown.appendMarkdown(`</div>`);
-    markdown.appendMarkdown(`<div style="padding: 6px 8px; font-size: 11px; color: ${textColor}; text-align: center; border-top: 1px solid ${borderColor}; background: ${isDark ? '#252525' : '#f5f5f5'};">`);
-    markdown.appendMarkdown(`💡 点击上方 "Preview Image" 按钮查看大图`);
-    markdown.appendMarkdown(`</div>`);
-    markdown.appendMarkdown(`</div>`);
-
-    markdown.appendMarkdown(`</div>`);
+    markdown.appendMarkdown(`---\n\n`);
+    markdown.appendMarkdown(`![Preview](${encodedUri}|width=300)\n\n`);
+    markdown.appendMarkdown(`---\n\n`);
+    markdown.appendMarkdown(`💡 *点击上方 "Preview Image" 按钮查看大图*`);
 
     return markdown;
   }
