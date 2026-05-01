@@ -47,6 +47,26 @@
           "type": "boolean",
           "default": true,
           "description": "%config.useRelativePath.description%"
+        },
+        "imageComment.enableDecorations": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.enableDecorations.description%"
+        },
+        "imageComment.showGutterIcon": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.showGutterIcon.description%"
+        },
+        "imageComment.showInlineIcon": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.showInlineIcon.description%"
+        },
+        "imageComment.highlightBackground": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.highlightBackground.description%"
         }
       }
     },
