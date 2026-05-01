@@ -127,21 +127,10 @@ export function findImageCommentsInDocument(
 export function createImageHoverContent(imageUri: vscode.Uri): vscode.MarkdownString {
   const markdown = new vscode.MarkdownString();
   markdown.isTrusted = true;
-  markdown.supportHtml = true;
 
   const encodedUri = imageUri.toString(true);
 
-  const html = `
-    <div style="display: flex; justify-content: center; align-items: center; max-width: 100%; max-height: 500px; overflow: hidden;">
-      <img
-        src="${encodedUri}"
-        alt="Preview"
-        style="max-width: 100%; max-height: 500px; object-fit: contain; display: block;"
-      />
-    </div>
-  `;
-
-  markdown.appendMarkdown(html);
+  markdown.appendMarkdown(`![Preview](${encodedUri}|width=600)`);
 
   return markdown;
 }
