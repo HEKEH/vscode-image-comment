@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { COMMENT_FORMATS } from './constants';
+import { COMMENT_FORMATS, DEFAULT_COMMENT_TEMPLATE } from './constants';
 
 /**
  * 获取注释格式
@@ -24,7 +24,7 @@ export function generateComment(
   languageId: string,
   config: vscode.WorkspaceConfiguration,
 ): string {
-  const template = config.get<string>('commentTemplate', '![image]({path})');
+  const template = config.get<string>('commentTemplate', DEFAULT_COMMENT_TEMPLATE);
   const commentText = template.replace('{path}', imagePath);
 
   const format = getCommentFormat(languageId);

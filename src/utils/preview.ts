@@ -127,10 +127,10 @@ export function findImageCommentsInDocument(
 export function createImageHoverContent(imageUri: vscode.Uri): vscode.MarkdownString {
   const markdown = new vscode.MarkdownString();
   markdown.isTrusted = true;
-  markdown.supportHtml = true;
 
   const encodedUri = imageUri.toString(true);
-  markdown.appendMarkdown(`![Preview](${encodedUri})`);
+
+  markdown.appendMarkdown(`![Preview](${encodedUri}|width=600)`);
 
   return markdown;
 }

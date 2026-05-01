@@ -40,7 +40,7 @@
         },
         "imageComment.commentTemplate": {
           "type": "string",
-          "default": "![image]({path})",
+          "default": "![image-comment]({path})",
           "description": "%config.commentTemplate.description%"
         },
         "imageComment.useRelativePath": {
