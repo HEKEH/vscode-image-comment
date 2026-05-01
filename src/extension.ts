@@ -1,6 +1,11 @@
 import * as vscode from 'vscode';
 import { detectImageFromClipboard } from './utils/clipboard';
 import { handleImagePaste } from './handlers/imagePaste';
+import { ImagePreviewHoverProvider } from './handlers/imagePreview';
+import {
+  ImagePreviewCodeLensProvider,
+  handlePreviewImageCommand,
+} from './handlers/imageCodeLens';
 import { initializeLogger } from './utils/logger';
 import { messages } from './nls';
 import { ImageInfo } from './utils/types';
@@ -45,15 +50,31 @@ async function handlePasteImageCommand(): Promise<void> {
 export function activate(context: vscode.ExtensionContext) {
   console.log('Image Comment extension is now active!');
 
-  // 初始化日志记录器
   initializeLogger(context);
 
-  // 注册粘贴图片命令（从右键菜单触发）
   const pasteImageCommand = vscode.commands.registerCommand(
     'imageComment.pasteImage',
     handlePasteImageCommand,
   );
   context.subscriptions.push(pasteImageCommand);
+
+  const previewImageCommand = vscode.commands.registerCommand(
+    'imageComment.previewImage',
+    handlePreviewImageCommand,
+  );
+  context.subscriptions.push(previewImageCommand);
+
+  const hoverProvider = vscode.languages.registerHoverProvider(
+    '*',
+    new ImagePreviewHoverProvider(),
+  );
+  context.subscriptions.push(hoverProvider);
+
+  const codeLensProvider = vscode.languages.registerCodeLensProvider(
+    '*',
+    new ImagePreviewCodeLensProvider(),
+  );
+  context.subscriptions.push(codeLensProvider);
 }
 
 export function deactivate() {}

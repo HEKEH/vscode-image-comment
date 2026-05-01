@@ -4,6 +4,7 @@
   "config.commentTemplate.description": "注释模板。使用 {path} 作为图片路径的占位符",
   "config.useRelativePath.description": "在注释中使用相对路径",
   "command.pasteImage.title": "粘贴图片为注释",
+  "command.previewImage.title": "预览图片注释",
   "message.noWorkspaceFolder": "未找到工作区文件夹",
   "message.failedToSaveImage": "保存图片失败：{0}",
   "message.noActiveEditor": "未找到活动编辑器",
