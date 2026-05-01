@@ -28,13 +28,13 @@ export class ImagePreviewCodeLensProvider implements vscode.CodeLensProvider {
         );
 
         const previewCodeLens = new vscode.CodeLens(lensRange, {
-          title: '$(eye) Preview Image',
+          title: `$(eye) ${messages.previewImageLabel()}`,
           command: 'imageComment.previewImage',
           arguments: [imageUri, match.imagePath],
         });
 
         const deleteCodeLens = new vscode.CodeLens(lensRange, {
-          title: '$(trash) Delete',
+          title: `$(trash) ${messages.deleteLabel()}`,
           command: 'imageComment.deleteImageComment',
           arguments: [match.range, match.imagePath, document.uri],
         });

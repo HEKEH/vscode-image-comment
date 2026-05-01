@@ -94,7 +94,7 @@ export class ImageDecorationProvider {
           const currentLineText = event.document.lineAt(commentLine).text;
 
           if (currentLineText !== comment.text) {
-            vscode.window.showWarningMessage(messages.readonlyWarning());
+            vscode.window.showWarningMessage(messages.readonlyWarning(messages.deleteLabel()));
             break;
           }
         }
@@ -155,17 +155,19 @@ export class ImageDecorationProvider {
       fileSize = this.formatFileSize(stats.size);
     } catch {}
 
-    markdown.appendMarkdown(`**📷 图片注释**\n\n`);
-    markdown.appendMarkdown(`**路径:** \`${imagePath}\`\n\n`);
+    markdown.appendMarkdown(`**📷 ${messages.imageCommentHoverTitle()}**\n\n`);
+    markdown.appendMarkdown(`**${messages.imagePathLabel()}:** \`${imagePath}\`\n\n`);
 
     if (fileSize) {
-      markdown.appendMarkdown(`**大小:** ${fileSize}\n\n`);
+      markdown.appendMarkdown(`**${messages.imageSizeLabel()}:** ${fileSize}\n\n`);
     }
 
     markdown.appendMarkdown(`---\n\n`);
     markdown.appendMarkdown(`![Preview](${encodedUri}|width=300)\n\n`);
     markdown.appendMarkdown(`---\n\n`);
-    markdown.appendMarkdown(`💡 *点击上方 "Preview Image" 按钮查看大图*`);
+    markdown.appendMarkdown(
+      `💡 *${messages.hoverPreviewHint(messages.previewImageLabel())}*`,
+    );
 
     return markdown;
   }

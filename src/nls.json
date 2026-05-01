@@ -1,4 +1,10 @@
 {
+  "message.previewImageLabel": "Preview Image",
+  "message.deleteLabel": "Delete",
+  "message.imageCommentHoverTitle": "Image Comment",
+  "message.imagePathLabel": "Path",
+  "message.imageSizeLabel": "Size",
+  "message.hoverPreviewHint": "Click the \"{0}\" button above to view a larger image.",
   "message.noWorkspaceFolder": "No workspace folder found",
   "message.failedToSaveImage": "Failed to save image: {0}",
   "message.noActiveEditor": "No active editor found",
@@ -19,6 +25,6 @@
   "message.deleteCommentAndImageSuccess": "Deleted image comment and associated image: {0}",
   "message.deleteCommentSuccess": "Deleted image comment: {0}",
   "message.deleteImageError": "Comment deleted, but error occurred while deleting image: {0}",
-  "message.readonlyWarning": "Image comment is read-only. Manual editing is not allowed. Please use the 'Delete' button above to remove this comment."
+  "message.readonlyWarning": "Image comment is read-only. Manual editing is not allowed. Please use the '{0}' button above to remove this comment."
 }
 

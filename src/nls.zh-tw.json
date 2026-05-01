@@ -1,4 +1,10 @@
 {
+  "message.previewImageLabel": "預覽圖片",
+  "message.deleteLabel": "刪除",
+  "message.imageCommentHoverTitle": "圖片註釋",
+  "message.imagePathLabel": "路徑",
+  "message.imageSizeLabel": "大小",
+  "message.hoverPreviewHint": "點擊上方「{0}」按鈕查看大圖。",
   "message.noWorkspaceFolder": "未找到工作區資料夾",
   "message.failedToSaveImage": "儲存圖片失敗：{0}",
   "message.noActiveEditor": "未找到活動編輯器",
@@ -19,6 +25,6 @@
   "message.deleteCommentAndImageSuccess": "已刪除圖片註釋和關聯圖片：{0}",
   "message.deleteCommentSuccess": "已刪除圖片註釋：{0}",
   "message.deleteImageError": "註釋已刪除，但刪除圖片時出錯：{0}",
-  "message.readonlyWarning": "圖片註釋為唯讀狀態，禁止手動編輯。請使用上方的 \"Delete\" 按鈕刪除此註釋。"
+  "message.readonlyWarning": "圖片註釋為唯讀狀態，禁止手動編輯。請使用上方「{0}」按鈕刪除此註釋。"
 }
 

@@ -1,4 +1,10 @@
 {
+  "message.previewImageLabel": "预览图片",
+  "message.deleteLabel": "删除",
+  "message.imageCommentHoverTitle": "图片注释",
+  "message.imagePathLabel": "路径",
+  "message.imageSizeLabel": "大小",
+  "message.hoverPreviewHint": "点击上方“{0}”按钮查看大图。",
   "message.noWorkspaceFolder": "未找到工作区文件夹",
   "message.failedToSaveImage": "保存图片失败：{0}",
   "message.noActiveEditor": "未找到活动编辑器",
@@ -19,6 +25,6 @@
   "message.deleteCommentAndImageSuccess": "已删除图片注释和关联图片：{0}",
   "message.deleteCommentSuccess": "已删除图片注释：{0}",
   "message.deleteImageError": "注释已删除，但删除图片时出错：{0}",
-  "message.readonlyWarning": "图片注释为只读状态，禁止手动编辑。请使用上方的 \"Delete\" 按钮删除此注释。"
+  "message.readonlyWarning": "图片注释为只读状态，禁止手动编辑。请使用上方“{0}”按钮删除此注释。"
 }
 

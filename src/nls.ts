@@ -74,6 +74,18 @@ function localize(key: string, defaultValue: string, ...args: any[]): string {
 
 // 导出本地化函数，使用 nls.json 中的默认值
 export const messages = {
+  previewImageLabel: () =>
+    localize('message.previewImageLabel', defaultMessages['message.previewImageLabel']),
+  deleteLabel: () =>
+    localize('message.deleteLabel', defaultMessages['message.deleteLabel']),
+  imageCommentHoverTitle: () =>
+    localize('message.imageCommentHoverTitle', defaultMessages['message.imageCommentHoverTitle']),
+  imagePathLabel: () =>
+    localize('message.imagePathLabel', defaultMessages['message.imagePathLabel']),
+  imageSizeLabel: () =>
+    localize('message.imageSizeLabel', defaultMessages['message.imageSizeLabel']),
+  hoverPreviewHint: (previewLabel: string) =>
+    localize('message.hoverPreviewHint', defaultMessages['message.hoverPreviewHint'], previewLabel),
   noWorkspaceFolder: () =>
     localize('message.noWorkspaceFolder', defaultMessages['message.noWorkspaceFolder']),
   failedToSaveImage: (error: string) =>
@@ -114,6 +126,6 @@ export const messages = {
     localize('message.deleteCommentSuccess', defaultMessages['message.deleteCommentSuccess'], imagePath),
   deleteImageError: (error: string) =>
     localize('message.deleteImageError', defaultMessages['message.deleteImageError'], error),
-  readonlyWarning: () =>
-    localize('message.readonlyWarning', defaultMessages['message.readonlyWarning']),
+  readonlyWarning: (deleteLabel: string) =>
+    localize('message.readonlyWarning', defaultMessages['message.readonlyWarning'], deleteLabel),
 };
