@@ -6,6 +6,19 @@
   "message.noImageFound": "No image found in clipboard. Please copy an image file or take a screenshot first.",
   "message.detectingImage": "Detecting image from clipboard...",
   "message.imageSaved": "Image saved: {0}",
-  "message.noSupportedPlatform": "This extension only supports macOS and Windows"
+  "message.noSupportedPlatform": "This extension only supports macOS and Windows",
+  "message.deleteConfirmTitle": "Delete Image Comment",
+  "message.deleteConfirmMessage": "Are you sure you want to delete this image comment and its associated image?\nImage path: {0}",
+  "message.deleteButton": "Delete",
+  "message.cancelButton": "Cancel",
+  "message.noImageCommentFound": "No image comment found at cursor position",
+  "message.failedToResolveImagePath": "Could not resolve image path",
+  "message.failedToOpenImage": "Failed to open image: {0}",
+  "message.failedToDeleteComment": "Failed to delete comment from editor",
+  "message.commentNotInActiveEditor": "Comment not in active editor, only deleting image file",
+  "message.deleteCommentAndImageSuccess": "Deleted image comment and associated image: {0}",
+  "message.deleteCommentSuccess": "Deleted image comment: {0}",
+  "message.deleteImageError": "Comment deleted, but error occurred while deleting image: {0}",
+  "message.readonlyWarning": "⚠️ Image comment is read-only. Manual editing is not allowed. Please use the 'Delete' button above to remove this comment."
 }
 
