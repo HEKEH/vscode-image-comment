@@ -78,7 +78,7 @@
       },
       {
         "command": "imageComment.deleteImageComment",
-        "title": "Delete Image Comment",
+        "title": "%command.deleteImageComment.title%",
         "icon": "$(trash)"
       }
     ],
