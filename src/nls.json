@@ -19,6 +19,6 @@
   "message.deleteCommentAndImageSuccess": "Deleted image comment and associated image: {0}",
   "message.deleteCommentSuccess": "Deleted image comment: {0}",
   "message.deleteImageError": "Comment deleted, but error occurred while deleting image: {0}",
-  "message.readonlyWarning": "⚠️ Image comment is read-only. Manual editing is not allowed. Please use the 'Delete' button above to remove this comment."
+  "message.readonlyWarning": "Image comment is read-only. Manual editing is not allowed. Please use the 'Delete' button above to remove this comment."
 }
 

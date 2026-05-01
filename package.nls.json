@@ -8,6 +8,7 @@
   "config.highlightBackground.description": "Highlight background of image comment lines",
   "command.pasteImage.title": "Paste Image as Comment",
   "command.previewImage.title": "Preview Image Comment",
+  "command.deleteImageComment.title": "Delete Image Comment",
   "message.noWorkspaceFolder": "No workspace folder found",
   "message.failedToSaveImage": "Failed to save image: {0}",
   "message.noActiveEditor": "No active editor found",

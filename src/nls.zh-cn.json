@@ -19,6 +19,6 @@
   "message.deleteCommentAndImageSuccess": "已删除图片注释和关联图片：{0}",
   "message.deleteCommentSuccess": "已删除图片注释：{0}",
   "message.deleteImageError": "注释已删除，但删除图片时出错：{0}",
-  "message.readonlyWarning": "⚠️ 图片注释为只读状态，禁止手动编辑。请使用上方的 \"Delete\" 按钮删除此注释。"
+  "message.readonlyWarning": "图片注释为只读状态，禁止手动编辑。请使用上方的 \"Delete\" 按钮删除此注释。"
 }
 

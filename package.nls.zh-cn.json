@@ -8,6 +8,7 @@
   "config.highlightBackground.description": "高亮图片注释行的背景",
   "command.pasteImage.title": "粘贴图片为注释",
   "command.previewImage.title": "预览图片注释",
+  "command.deleteImageComment.title": "删除图片注释",
   "message.noWorkspaceFolder": "未找到工作区文件夹",
   "message.failedToSaveImage": "保存图片失败：{0}",
   "message.noActiveEditor": "未找到活动编辑器",

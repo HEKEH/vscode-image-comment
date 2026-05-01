@@ -19,6 +19,6 @@
   "message.deleteCommentAndImageSuccess": "已刪除圖片註釋和關聯圖片：{0}",
   "message.deleteCommentSuccess": "已刪除圖片註釋：{0}",
   "message.deleteImageError": "註釋已刪除，但刪除圖片時出錯：{0}",
-  "message.readonlyWarning": "⚠️ 圖片註釋為唯讀狀態，禁止手動編輯。請使用上方的 \"Delete\" 按鈕刪除此註釋。"
+  "message.readonlyWarning": "圖片註釋為唯讀狀態，禁止手動編輯。請使用上方的 \"Delete\" 按鈕刪除此註釋。"
 }
 
