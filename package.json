@@ -55,6 +55,11 @@
         "command": "imageComment.pasteImage",
         "title": "%command.pasteImage.title%",
         "icon": "$(file-media)"
+      },
+      {
+        "command": "imageComment.previewImage",
+        "title": "%command.previewImage.title%",
+        "icon": "$(eye)"
       }
     ],
     "menus": {

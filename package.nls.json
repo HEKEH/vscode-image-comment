@@ -4,6 +4,7 @@
   "config.commentTemplate.description": "Comment template. Use {path} as placeholder for image path",
   "config.useRelativePath.description": "Use relative path in comments",
   "command.pasteImage.title": "Paste Image as Comment",
+  "command.previewImage.title": "Preview Image Comment",
   "message.noWorkspaceFolder": "No workspace folder found",
   "message.failedToSaveImage": "Failed to save image: {0}",
   "message.noActiveEditor": "No active editor found",
