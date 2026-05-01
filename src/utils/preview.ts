@@ -130,7 +130,18 @@ export function createImageHoverContent(imageUri: vscode.Uri): vscode.MarkdownSt
   markdown.supportHtml = true;
 
   const encodedUri = imageUri.toString(true);
-  markdown.appendMarkdown(`![Preview](${encodedUri})`);
+
+  const html = `
+    <div style="display: flex; justify-content: center; align-items: center; max-width: 100%; max-height: 500px; overflow: hidden;">
+      <img
+        src="${encodedUri}"
+        alt="Preview"
+        style="max-width: 100%; max-height: 500px; object-fit: contain; display: block;"
+      />
+    </div>
+  `;
+
+  markdown.appendMarkdown(html);
 
   return markdown;
 }
