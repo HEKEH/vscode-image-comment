@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { DEFAULT_COMMENT_TEMPLATE } from '../utils/constants';
 import {
   findImageCommentsInDocument,
   resolveImagePath,
@@ -11,7 +12,7 @@ export class ImagePreviewCodeLensProvider implements vscode.CodeLensProvider {
     token: vscode.CancellationToken,
   ): vscode.ProviderResult<vscode.CodeLens[]> {
     const config = vscode.workspace.getConfiguration('imageComment');
-    const template = config.get<string>('commentTemplate', '![image]({path})');
+    const template = config.get<string>('commentTemplate', DEFAULT_COMMENT_TEMPLATE);
 
     const matches = findImageCommentsInDocument(document, template);
     const codeLenses: vscode.CodeLens[] = [];
@@ -50,7 +51,7 @@ export async function handlePreviewImageCommand(
     }
 
     const config = vscode.workspace.getConfiguration('imageComment');
-    const template = config.get<string>('commentTemplate', '![image]({path})');
+    const template = config.get<string>('commentTemplate', DEFAULT_COMMENT_TEMPLATE);
 
     const { findImageCommentAtPosition, resolveImagePath } = await import('../utils/preview');
     const match = findImageCommentAtPosition(

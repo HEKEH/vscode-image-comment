@@ -4,6 +4,9 @@ export const MAX_IMAGE_SIZE = 50 * 1024 * 1024;
 // 支持的图片格式
 export const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'];
 
+// 默认注释模板
+export const DEFAULT_COMMENT_TEMPLATE = '![image-comment]({path})';
+
 // 文件类型到注释格式的映射
 export const COMMENT_FORMATS: Record<
   string,

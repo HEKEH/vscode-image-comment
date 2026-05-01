@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { DEFAULT_COMMENT_TEMPLATE } from '../utils/constants';
 import {
   findImageCommentAtPosition,
   resolveImagePath,
@@ -12,7 +13,7 @@ export class ImagePreviewHoverProvider implements vscode.HoverProvider {
     token: vscode.CancellationToken,
   ): vscode.ProviderResult<vscode.Hover> {
     const config = vscode.workspace.getConfiguration('imageComment');
-    const template = config.get<string>('commentTemplate', '![image]({path})');
+    const template = config.get<string>('commentTemplate', DEFAULT_COMMENT_TEMPLATE);
 
     const match = findImageCommentAtPosition(document, position, template);
     if (!match) {
