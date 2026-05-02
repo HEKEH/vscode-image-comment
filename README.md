@@ -22,6 +22,10 @@ A VSCode extension that automatically saves pasted images and inserts comment re
 
 ## 🚀 Usage
 
+The following demo shows pasting an image from the clipboard, saving it under the workspace, and using inline preview/delete on the inserted comment.
+
+![Image Comment usage demo](./images/demo.gif)
+
 1. Copy an image to clipboard (screenshot, copy image file, copy from browser, etc.)
 2. Right-click in the code editor and select **"Paste Image as Comment"**
 
