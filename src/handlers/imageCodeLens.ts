@@ -144,7 +144,24 @@ export async function handleDeleteImageCommentCommand(
     return;
   }
 
+  const imageUri = resolveImagePath(imagePath, documentUri);
+
   if (editor && editor.document.uri.toString() === documentUri.toString()) {
+    if (range.start.line < 0 || range.start.line >= editor.document.lineCount) {
+      vscode.window.showErrorMessage(messages.failedToDeleteComment());
+      return;
+    }
+
+    if (imageUri) {
+      try {
+        await fs.promises.unlink(imageUri.fsPath);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        vscode.window.showWarningMessage(messages.deleteImageError(errorMessage));
+        return;
+      }
+    }
+
     const editRange = new vscode.Range(
       new vscode.Position(range.start.line, 0),
       new vscode.Position(range.start.line, editor.document.lineAt(range.start.line).text.length)
@@ -158,20 +175,24 @@ export async function handleDeleteImageCommentCommand(
       vscode.window.showErrorMessage(messages.failedToDeleteComment());
       return;
     }
-  } else {
-    vscode.window.showWarningMessage(messages.commentNotInActiveEditor());
-  }
 
-  const imageUri = resolveImagePath(imagePath, documentUri);
-  if (imageUri) {
-    try {
-      await fs.promises.unlink(imageUri.fsPath);
+    if (imageUri) {
       vscode.window.showInformationMessage(messages.deleteCommentAndImageSuccess(imagePath));
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      vscode.window.showWarningMessage(messages.deleteImageError(errorMessage));
+    } else {
+      vscode.window.showInformationMessage(messages.deleteCommentSuccess(imagePath));
     }
   } else {
-    vscode.window.showInformationMessage(messages.deleteCommentSuccess(imagePath));
+    vscode.window.showWarningMessage(messages.commentNotInActiveEditor());
+    if (imageUri) {
+      try {
+        await fs.promises.unlink(imageUri.fsPath);
+        vscode.window.showInformationMessage(messages.deleteCommentAndImageSuccess(imagePath));
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        vscode.window.showWarningMessage(messages.deleteImageError(errorMessage));
+      }
+    } else {
+      vscode.window.showInformationMessage(messages.deleteCommentSuccess(imagePath));
+    }
   }
 }

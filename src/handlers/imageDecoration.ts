@@ -5,10 +5,12 @@ import { messages } from '../nls';
 import * as path from 'path';
 import * as fs from 'fs';
 
+type TrackedImageComment = { line: number; text: string; range: vscode.Range; imagePath: string };
+
 export class ImageDecorationProvider {
   private imageCommentDecoration: vscode.TextEditorDecorationType;
   private context: vscode.ExtensionContext;
-  private previousImageComments: Map<string, { line: number; text: string; range: vscode.Range }[]> = new Map();
+  private previousImageComments: Map<string, TrackedImageComment[]> = new Map();
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
@@ -61,16 +63,17 @@ export class ImageDecorationProvider {
     const template = config.get<string>('commentTemplate', DEFAULT_COMMENT_TEMPLATE);
     const matches = findImageCommentsInDocument(document, template);
 
-    const comments = matches.map(match => ({
+    const comments: TrackedImageComment[] = matches.map(match => ({
       line: match.range.start.line,
       text: document.lineAt(match.range.start.line).text,
       range: match.range,
+      imagePath: match.imagePath,
     }));
 
     this.previousImageComments.set(document.uri.toString(), comments);
   }
 
-  private getImageCommentsState(documentUri: string): { line: number; text: string; range: vscode.Range }[] {
+  private getImageCommentsState(documentUri: string): TrackedImageComment[] {
     return this.previousImageComments.get(documentUri) || [];
   }
 
@@ -91,10 +94,17 @@ export class ImageDecorationProvider {
         const commentLine = comment.line;
 
         if (changeStartLine <= commentLine && changeEndLine >= commentLine) {
+          if (commentLine < 0 || commentLine >= event.document.lineCount) {
+            continue;
+          }
+
           const currentLineText = event.document.lineAt(commentLine).text;
 
           if (currentLineText !== comment.text) {
-            vscode.window.showWarningMessage(messages.readonlyWarning(messages.deleteLabel()));
+            const imageUri = resolveImagePath(comment.imagePath, event.document.uri);
+            if (imageUri) {
+              vscode.window.showWarningMessage(messages.readonlyWarning(messages.deleteLabel()));
+            }
             break;
           }
         }
