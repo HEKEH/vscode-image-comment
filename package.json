@@ -2,7 +2,7 @@
   "name": "image-comment",
   "displayName": "Image Comment",
   "description": "%extension.description%",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "publisher": "hekaigustav",
   "license": "MIT",
   "engines": {
