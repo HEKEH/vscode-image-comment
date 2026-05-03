@@ -4,7 +4,7 @@ A VSCode extension that automatically saves pasted images and inserts comment re
 
 [English](./README.md) | [简体中文](./README.zh-CN.md)
 
-[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/hekaigustav.image-comment?label=VS%20Code%20Marketplace&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=hekaigustav.image-comment)
+[![VS Code Marketplace](https://img.shields.io/badge/VS%20Code%20Marketplace-007ACC?logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=hekaigustav.image-comment)
 
 ## ✨ Features
 
